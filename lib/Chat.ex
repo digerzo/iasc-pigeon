@@ -5,12 +5,21 @@ defmodule Chat do
 
   use GenServer
 
-  def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+  @spec start(any(), any()) :: :ignore | {:error, any()} | {:ok, pid()}
+  def start(_, _) do
+    GenServer.start(Chat, [], [])
+  end
+
+  def start_link(state, name) do
+    GenServer.start_link(__MODULE__, state, name: name)
   end
 
   def init(state) do
     {:ok, state}
+  end
+
+  def read_messages(chat_pid) do
+    GenServer.call(chat_pid, :read_messages)
   end
 
   def send_message(chat_pid, message) do
@@ -30,14 +39,18 @@ defmodule Chat do
     {:noreply, %State{state | messages: updated_messages}}
   end
 
+  def handle_call(:read_messages, _from, state) do
+    {:reply, state.messages, state}
+  end
+
   def handle_cast({:modify_message, message_id, new_text}, state) do
-    case Map.get(state.messages, message_id) do
-      nil -> {:noreply, state}
-      message ->
-        updated_message = %{message | text: new_text}
-        updated_messages = Map.update!(state.messages, message_id, &updated_message/1)
-        {:noreply, %State{state | messages: updated_messages}}
-    end
+    # case Map.get(state.messages, message_id) do
+    #   nil -> {:noreply, state}
+    #   message ->
+    #     updated_message = %{message | text: new_text}
+    #     updated_messages = Map.update!(state.messages, message_id, &updated_message/1)
+    #     {:noreply, %State{state | messages: updated_messages}}
+    # end
   end
 
   def handle_cast({:delete_message, message_id}, state) do

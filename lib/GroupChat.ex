@@ -43,13 +43,13 @@ defmodule GroupChat do
   end
 
   def handle_cast({:modify_message, message_id, new_text}, state) do
-    case Map.get(state.messages, message_id) do
-      nil -> {:noreply, state}
-      message ->
-        updated_message = %{message | text: new_text}
-        updated_messages = Map.update!(state.messages, message_id, &updated_message/1)
-        {:noreply, %State{state | messages: updated_messages}}
-    end
+    # case Map.get(state.messages, message_id) do
+    #   nil -> {:noreply, state}
+    #   message ->
+    #     updated_message = %{message | text: new_text}
+    #     updated_messages = Map.update!(state.messages, message_id, &updated_message/1)
+    #     {:noreply, %State{state | messages: updated_messages}}
+    # end
   end
 
   def handle_cast({:delete_message, message_id}, state) do
