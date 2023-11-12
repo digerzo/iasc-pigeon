@@ -17,3 +17,10 @@ Vamos a tener que ejecutar el siguiente comando -> `mix local.hex` y despues eje
 Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente comando:
 
 `iex -S mix`
+
+`lauti = User.new("lauti")`
+`agus = User.new("agus")`
+`{:ok, lauti_pid} = Chat.start_link(%Chat.State{}, LautiChat)`
+`{:ok, agus_pid} = Chat.start_link(%Chat.State{}, AgusChat)`
+`Chat.send_message(lauti_pid, Message.new("1", "Hola Agus", lauti, agus))`
+`Chat.send_message(agus_pid , Message.new("2", "Hola lauti", agus, lauti))`
