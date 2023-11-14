@@ -18,8 +18,31 @@ defmodule Chat do
     {:ok, state}
   end
 
-  def read_messages(chat_pid) do
-    GenServer.call(chat_pid, :read_messages)
+  ## Callbacks
+
+  def handle_call(:get_messages, _from, state) do
+    {:reply, state.messages, state}
+  end
+
+  def handle_cast({:send_message, message = %Message{}}, state) do
+    updated_messages = Map.put(state.messages, message.id, message)
+    {:noreply, %State{state | messages: updated_messages}}
+  end
+
+  def handle_cast({:modify_message, message_id, new_text}, state) do
+    case Map.get(state.messages, message_id) do
+      nil -> {:noreply, state}
+      message ->
+        updated_message = %{message | text: new_text}
+        updated_messages = Map.update!(state.messages, message_id, fn _ -> updated_message end)
+        {:noreply, %State{state | messages: updated_messages}}
+    end
+  end
+
+  # --- funciones de uso ---
+
+  def get_messages(chat_pid) do
+    GenServer.call(chat_pid, :get_messages)
   end
 
   def send_message(chat_pid, message) do
@@ -30,31 +53,4 @@ defmodule Chat do
     GenServer.cast(chat_pid, {:modify_message, message_id, new_text})
   end
 
-  def delete_message(chat_pid, message_id) do
-    GenServer.cast(chat_pid, {:delete_message, message_id})
-  end
-
-  def handle_cast({:send_message, message = %Message{}}, state) do
-    updated_messages = Map.put(state.messages, message.id, message)
-    {:noreply, %State{state | messages: updated_messages}}
-  end
-
-  def handle_call(:read_messages, _from, state) do
-    {:reply, state.messages, state}
-  end
-
-  def handle_cast({:modify_message, message_id, new_text}, state) do
-    # case Map.get(state.messages, message_id) do
-    #   nil -> {:noreply, state}
-    #   message ->
-    #     updated_message = %{message | text: new_text}
-    #     updated_messages = Map.update!(state.messages, message_id, &updated_message/1)
-    #     {:noreply, %State{state | messages: updated_messages}}
-    # end
-  end
-
-  def handle_cast({:delete_message, message_id}, state) do
-    updated_messages = Map.delete(state.messages, message_id)
-    {:noreply, %State{state | messages: updated_messages}}
-  end
 end

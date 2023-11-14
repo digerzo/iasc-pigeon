@@ -18,9 +18,22 @@ Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente coma
 
 `iex -S mix`
 
+## Casos de prueba basicos
+
+### Envio de mensajes 1 a 1
+
 `lauti = User.new("lauti")`
+
 `agus = User.new("agus")`
-`{:ok, lauti_pid} = Chat.start_link(%Chat.State{}, LautiChat)`
-`{:ok, agus_pid} = Chat.start_link(%Chat.State{}, AgusChat)`
-`Chat.send_message(lauti_pid, Message.new("1", "Hola Agus", lauti, agus))`
-`Chat.send_message(agus_pid , Message.new("2", "Hola lauti", agus, lauti))`
+
+`{:ok, chatAgusLauti} = Chat.start_link(%Chat.State{}, ChatAgusLauti)`
+
+`Chat.send_message(chatAgusLauti, Message.new("Hola Agus", lauti, agus))`
+
+`Chat.get_messages(chatAgusLauti)`
+
+### Modificación de un mensaje
+
+`Chat.modify_message(chatAgusLauti, 1699931948791, "Hola Aguuuuus!" )`
+
+`Chat.get_messages(chatAgusLauti)`
