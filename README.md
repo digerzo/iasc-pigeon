@@ -37,3 +37,9 @@ Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente coma
 `Chat.modify_message(chatAgusLauti, 1699931948791, "Hola Aguuuuus!" )`
 
 `Chat.get_messages(chatAgusLauti)`
+
+### Eliminación de un mensaje
+
+`Chat.delete_message(chatAgusLauti, 1699931948791)`
+
+`Chat.get_messages(chatAgusLauti)`

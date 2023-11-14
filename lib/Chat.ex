@@ -30,6 +30,7 @@ defmodule Chat do
   end
 
   def handle_cast({:modify_message, message_id, new_text}, state) do
+    # Obtengo mensaje de la lista de mensajes
     case Map.get(state.messages, message_id) do
       nil -> {:noreply, state}
       message ->
@@ -37,6 +38,15 @@ defmodule Chat do
         updated_messages = Map.update!(state.messages, message_id, fn _ -> updated_message end)
         {:noreply, %State{state | messages: updated_messages}}
     end
+  end
+
+  def handle_cast({:delete_message, message_id}, state) do
+    case Map.get(state.messages, message_id) do
+      nil -> {:noreply, state}
+      _ ->
+        updated_messages = Map.delete(state.messages, message_id)
+        {:noreply, %State{state | messages: updated_messages}}
+      end
   end
 
   # --- funciones de uso ---
@@ -51,6 +61,10 @@ defmodule Chat do
 
   def modify_message(chat_pid, message_id, new_text) do
     GenServer.cast(chat_pid, {:modify_message, message_id, new_text})
+  end
+
+  def delete_message(chat_pid, message_id) do
+    GenServer.cast(chat_pid, {:delete_message, message_id})
   end
 
 end
