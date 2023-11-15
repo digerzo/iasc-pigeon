@@ -11,17 +11,6 @@ defmodule Chat do
     GenServer.start_link(__MODULE__, state, name: name)
   end
 
-  # def init(state) do
-  #   { messages, chatSecurity } = state
-
-  #   chat_state = %ChatState{
-  #     messages: messages,
-  #     chatSecurity: chatSecurity
-  #   }
-
-  #   {:ok, chat_state}
-  # end
-
   def init(state) do
     %ChatState{messages: messages, chatSecurity: chatSecurity} = state
 
