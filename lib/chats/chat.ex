@@ -12,13 +12,15 @@ defmodule Chat do
   end
 
   def init(state) do
-    %ChatState{messages: messages, chatSecurity: chatSecurity} = state
+    %ChatState{messages: messages} = state
 
     # Crea el estado del chat
     chat_state = %ChatState{
-      messages: messages,
-      chatSecurity: chatSecurity
+      messages: messages
     }
+
+    # Linkeo proceso limpiador de mensajes
+    {:ok, _ } = MessageCleanup.start_link(%{}, MessageCleanup )
 
     {:ok, chat_state}
   end
@@ -60,17 +62,6 @@ defmodule Chat do
       end
   end
 
-  def handle_call(:is_secure, _from, state) do
-    {:reply, state.chatSecurity.secure, state}
-  end
-
-  def handle_cast({:set_secure, secure}, state) do
-    new_security = %ChatSecurity{state.chatSecurity | secure: secure}
-    new_state = %ChatState{state | chatSecurity: new_security}
-    # Logger.info("Chat security: #{inspect(secure)}")
-    {:noreply, new_state}
-  end
-
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -89,12 +80,9 @@ defmodule Chat do
     GenServer.cast(chat_pid, {:delete_message, message_id})
   end
 
-  def is_secure(chat_pid) do
-    GenServer.call(chat_pid, :is_secure)
-  end
-
-  def set_secure(chat_pid, secure) do
-    GenServer.cast(chat_pid, {:set_secure, secure})
-  end
+  # Función para limpiar mensajes expirados
+  # def cleanup_expired_messages(chat_pid) do
+  #   GenServer.cast(pid, :cleanup_expired_messages)
+  # end
 
 end

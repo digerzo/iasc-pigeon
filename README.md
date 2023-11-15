@@ -26,20 +26,20 @@ Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente coma
 
 `agus = User.new("agus")`
 
-`{:ok, chatAgusLauti} = Chat.start_link(%ChatState{ messages: %{}, chatSecurity: %ChatSecurity{} }, ChatAgusLauti)`
+`{:ok, chat_agus_lauti} = Chat.start_link(%ChatState{ messages: %{}}, chat_agus_lauti)`
 
-`Chat.send_message(chatAgusLauti, Message.new("Hola Agus", lauti, agus))`
+`Chat.send_message(chat_agus_lauti, Message.new("Hola Agus", lauti, agus))`
 
-`Chat.get_messages(chatAgusLauti)`
+`Chat.get_messages(chat_agus_lauti)`
 
 ### Modificación de un mensaje
 
-`Chat.modify_message(chatAgusLauti, 1699931948791, "Hola Aguuuuus!" )`
+`Chat.modify_message(chat_agus_lauti, 1699931948791, "Hola Aguuuuus!" )`
 
-`Chat.get_messages(chatAgusLauti)`
+`Chat.get_messages(chat_agus_lauti)`
 
 ### Eliminación de un mensaje
 
-`Chat.delete_message(chatAgusLauti, 1699931948791)`
+`Chat.delete_message(chat_agus_lauti, 1699931948791)`
 
-`Chat.get_messages(chatAgusLauti)`
+`Chat.get_messages(chat_agus_lauti)`

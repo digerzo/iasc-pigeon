@@ -1,4 +1,4 @@
-defmodule IASCPigeon.MixProject do
+defmodule Pigeon.MixProject do
   use Mix.Project
 
   def project do
@@ -15,8 +15,8 @@ defmodule IASCPigeon.MixProject do
   def application do
     [
       extra_applications: [:logger, :eex, :wx, :observer, :runtime_tools],
-      # mod: {IASCPigeon.Application, []}
-      mod: {Chat, []}
+      mod: {Pigeon.Application, []}
+      # mod: {Chat, []}
     ]
   end
 
