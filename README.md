@@ -26,7 +26,7 @@ Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente coma
 
 `agus = User.new("agus")`
 
-`{:ok, chatAgusLauti} = Chat.start_link(%Chat.State{}, ChatAgusLauti)`
+`{:ok, chatAgusLauti} = Chat.start_link(%ChatState{ messages: %{}, chatSecurity: %ChatSecurity{} }, ChatAgusLauti)`
 
 `Chat.send_message(chatAgusLauti, Message.new("Hola Agus", lauti, agus))`
 
