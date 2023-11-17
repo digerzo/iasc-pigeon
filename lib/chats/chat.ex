@@ -53,13 +53,11 @@ defmodule Chat do
   end
 
   def handle_cast({:delete_message, message_id}, state) do
-    %ChatState{messages: current_messages} = state
-    case Map.get(current_messages, message_id) do
-      nil -> {:noreply, state}
-      _ ->
-        updated_messages = Map.delete(current_messages, message_id)
-        {:noreply, %ChatState{state | messages: updated_messages}}
-      end
+    delete_messages_action([message_id], state)
+  end
+
+  def handle_cast({:delete_messages, message_ids}, state) do
+    delete_messages_action(message_ids, state)
   end
 
   # --- funciones de uso ---
@@ -80,9 +78,32 @@ defmodule Chat do
     GenServer.cast(chat_pid, {:delete_message, message_id})
   end
 
-  # Función para limpiar mensajes expirados
-  # def cleanup_expired_messages(chat_pid) do
-  #   GenServer.cast(pid, :cleanup_expired_messages)
-  # end
+  def delete_messages(chat_pid, message_ids) do
+    GenServer.cast(chat_pid, {:delete_messages, message_ids})
+  end
+
+  # --- Auxiliares ---
+
+  defp delete_message_action(message_id, state) do
+    updated_messages = Map.delete(state.messages, message_id)
+    %ChatState{state | messages: updated_messages}
+  end
+
+  defp delete_messages_action(message_ids, state) do
+    # Se itera lista de message_ids
+    Enum.reduce(message_ids, {:noreply, state}, fn message_id, {result, acc_state} ->
+      # Se verifica si el message_id actual existe
+      case Map.get(acc_state.messages, message_id) do
+        # Si no existe, la tupla se devuelve sin realizar ninguna acción
+        nil ->
+          {result, acc_state}
+        # Si existe, se elimina el mensaje
+        _ ->
+          updated_state = delete_message_action(message_id, acc_state)
+          {:noreply, updated_state}
+      end
+    end)
+  end
+
 
 end
