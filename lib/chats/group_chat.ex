@@ -43,6 +43,19 @@ defmodule GroupChat do
     {:noreply, new_state}
   end
 
+  def handle_cast({:modify_message, message_id, new_text}, state) do
+    # Logger.info("Se modifica el mensaje con ID: #{message_id}.")
+    %GroupChatState{messages: current_messages} = state
+    # Obtengo mensaje de la lista de mensajes
+    case Map.get(current_messages, message_id) do
+      nil -> {:noreply, state}
+      message ->
+        updated_message = %{message | text: new_text}
+        updated_messages = Map.update!(current_messages, message_id, fn _ -> updated_message end)
+        {:noreply, %GroupChatState{state | messages: updated_messages}}
+    end
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -51,6 +64,10 @@ defmodule GroupChat do
 
   def send_message(chat_pid, message) do
     GenServer.cast(chat_pid, {:send_message, message})
+  end
+
+  def modify_message(chat_pid, message_id, new_text) do
+    GenServer.cast(chat_pid, {:modify_message, message_id, new_text})
   end
 
 end
