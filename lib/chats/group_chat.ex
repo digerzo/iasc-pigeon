@@ -88,10 +88,25 @@ defmodule GroupChat do
         nil -> {:noreply, state}
         _ ->
           updated_users = Map.delete(current_users, user_to_delete_id)
-          {:noreply, %GroupChatState{state | messages: updated_users}}
+          {:noreply, %GroupChatState{state | users: updated_users}}
       end
     else
       IO.puts("No tiene permiso para eliminar mensajes")
+    end
+  end
+
+  def handle_cast({:make_admin, user_id, user_to_be_admin = %User{}}, state) do
+    %GroupChatState{users: current_users, admins: current_admins} = state
+    if Map.has_key?(current_admins, user_id) do
+      case Map.get(current_users, user_to_be_admin.id) do
+        nil -> {:noreply, state}
+        _ ->
+          updated_users = Map.delete(current_users, user_to_be_admin.id)
+          updated_admins = Map.put(current_admins, user_to_be_admin.id, user_to_be_admin)
+          {:noreply, %GroupChatState{state | users: updated_users, admins: updated_admins}}
+      end
+    else
+      IO.puts("No tiene permiso para dar privilegios de admin")
     end
   end
 
@@ -121,4 +136,7 @@ defmodule GroupChat do
     GenServer.cast(chat_pid, {:delete_user, user_id, user_to_delete_id})
   end
 
+  def make_admin(chat_pid, user_id, user_to_be_admin) do
+    GenServer.cast(chat_pid, {:make_admin, user_id, user_to_be_admin})
+  end
 end
