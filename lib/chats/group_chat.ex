@@ -34,10 +34,23 @@ defmodule GroupChat do
     {:reply, state.messages, state}
   end
 
+  def handle_cast({:send_message, message = %Message{}}, state) do
+    # Desestructurar el estado para obtener los mensajes
+    %GroupChatState{messages: current_messages} = state
+    updated_messages = Map.put(current_messages, message.id, message)
+    new_state = %GroupChatState{state | messages: updated_messages}
+    Notification.send_notification(self(), message)
+    {:noreply, new_state}
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
     GenServer.call(chat_pid, :get_messages)
+  end
+
+  def send_message(chat_pid, message) do
+    GenServer.cast(chat_pid, {:send_message, message})
   end
 
 end
