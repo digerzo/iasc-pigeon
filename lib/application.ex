@@ -5,7 +5,7 @@ defmodule Pigeon.Application do
     import Supervisor.Spec, warn: false
 
     children = [
-      %{id: Chats.Supervisor, start: {Chats.Supervisor, :start_link, [[]]} },
+      %{id: Chats.ChatSupervisor, start: {Chats.ChatSupervisor, :start_link, [[]]} },
     ]
 
     opts = [strategy: :one_for_one, max_seconds: 5, max_restarts: 3]

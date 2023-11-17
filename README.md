@@ -20,32 +20,29 @@ Cargando las dependencias y el modulo mediante mix, ejecutando el siguiente coma
 
 ## Casos de prueba basicos
 
-### Envio de mensajes 1 a 1
+----------------------------------
 
-`lauti = User.new("lauti")`
+# CHAT
 
-`agus = User.new("agus")`
+ChatWithAgent.send_message(ChatAgusLauti, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
 
-`{:ok, ChatAgusLauti} = Chat.start_link(%ChatState{ messages: %{}}, ChatAgusLauti)`
+ChatWithAgent.get_messages(ChatAgusLauti)
 
-`Chat.send_message(ChatAgusLauti, Message.new("Hola Agus", lauti, agus))`
+ChatWithAgent.modify_message(ChatAgusLauti,1700247261156, "AAAAAAAAA")
 
-`Chat.get_messages(ChatAgusLauti)`
+ChatWithAgent.delete_message(ChatAgusLauti,1700247261156)
 
-### Modificación de un mensaje
+ChatWithAgent.delete_messages(ChatAgusLauti,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
 
-`Chat.modify_message(ChatAgusLauti, 1699931948791, "Hola Aguuuuus!" )`
 
-`Chat.get_messages(ChatAgusLauti)`
+# AGENT
+Chats.ChatAgent.add_message(ChatAgent, Message.new("Que onda", %User{id: "lauti"}, %User{id: "agus"}) )
 
-### Eliminación de un mensaje
+Chats.ChatAgent.get_messages(ChatAgent)
 
-`Chat.delete_message(ChatAgusLauti, 1699931948791)`
+Chats.ChatAgent.modify_message(ChatAgent,1700246344618, "BBBBBBBBBBB" )
 
-`Chat.get_messages(ChatAgusLauti)`
+Chats.ChatAgent.delete_message(ChatAgent, 1700246344618)
 
-### Eliminacion de una lista de mensajes
+Chats.ChatAgent.delete_messages(ChatAgent, [1700246704557, 1700246702916])
 
-`Chat.delete_messages(ChatAgusLauti, [1700233659060, 1700233704312])`
-
-`Chat.get_messages(ChatAgusLauti)`

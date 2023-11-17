@@ -17,4 +17,8 @@ defmodule Message do
     }
   end
 
+  def update_text(message, new_text) do
+    %Message{message | text: new_text}
+  end
+
 end

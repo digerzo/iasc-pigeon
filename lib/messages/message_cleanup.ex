@@ -19,6 +19,7 @@ defmodule MessageCleanup do
     # Cada 3000 milisegundos intenta limpiar mensajes
     Process.send_after(self(), :cleanup, 3000)
 
+    # TODO: revisar como manejar correctamente este tema
     # Obtengo procesos linkeados
     { _ , links } = Process.info(self(), :links)
     # Logger.info("Links: #{inspect(links)}")

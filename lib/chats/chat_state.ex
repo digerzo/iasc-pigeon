@@ -1,3 +1,3 @@
 defmodule ChatState do
-  defstruct messages: %{}
+  defstruct [:agent_pid, :message_cleanup_pid]
 end
