@@ -6,40 +6,64 @@ defmodule Chat do
     GenServer.start(Chat, %{})
   end
 
-  def start_link(state, name) do
+  def start_link(chat_id, info) do
     GenServer.start_link(__MODULE__,
-     %ChatState{agent_pid: state.agent_pid, message_cleanup_pid: state.message_cleanup_pid},
-      name: name)
+    {chat_id, info},
+     name: __MODULE__ # via_tuple(chat_id)
+     )
   end
 
-  def init(state) do
-    {:ok, state}
+  # child spec
+  def child_spec({chat_id, info}) do
+    %{
+      id: "chat#{chat_id}",
+      start: {__MODULE__, :start_link, [chat_id, info]},
+      type: :worker,
+      restart: :transient
+    }
+  end
+
+  def init({chat_id, info}) do
+    {agent_pid, message_cleanup_pid} = info
+
+    chat_state = %ChatState{
+      id: chat_id,
+      agent_pid: agent_pid,
+      message_cleanup_pid: message_cleanup_pid
+    }
+
+    {:ok, {chat_id, chat_state}}
   end
 
   ## Callbacks
 
-  def handle_call(:get_messages, _from, state) do
-    {:reply, Chats.ChatAgent.get_messages(state.agent_pid), state}
+  # Chat.get_messages(pid)
+  def handle_call(:get_messages, _from, {_ , chat_state}) do
+    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), chat_state}
   end
 
-  def handle_cast({:send_message, message = %Message{}}, state) do
-    Chats.ChatAgent.add_message(state.agent_pid, message)
-    {:noreply, state}
+  # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
+  def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
+    Chats.ChatAgent.add_message(chat_state.agent_pid, message)
+    {:noreply, {chat_id, chat_state}}
   end
 
-  def handle_cast({:modify_message, message_id, new_text}, state) do
-    Chats.ChatAgent.modify_message(state.agent_pid, message_id, new_text)
-    {:noreply, state}
+  # Chat.modify_message(pid, 1700247261156, "AAAAAAAAA")
+  def handle_cast({:modify_message, message_id, new_text}, {chat_id, chat_state}) do
+    Chats.ChatAgent.modify_message(chat_state.agent_pid, message_id, new_text)
+    {:noreply, {chat_id, chat_state}}
   end
 
-  def handle_cast({:delete_message, message_id}, state) do
-    Chats.ChatAgent.delete_message(state.agent_pid, message_id)
-    {:noreply, state}
+  # Chat.delete_message(pid, 1700247261156)
+  def handle_cast({:delete_message, message_id}, {chat_id, chat_state}) do
+    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
+    {:noreply, {chat_id, chat_state}}
   end
 
-  def handle_cast({:delete_messages, message_ids}, state) do
-    Chats.ChatAgent.delete_messages(state.agent_pid, message_ids)
-    {:noreply, state}
+  # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
+  def handle_cast({:delete_messages, message_ids}, {chat_id, chat_state}) do
+    Chats.ChatAgent.delete_messages(chat_state.agent_pid, message_ids)
+    {:noreply, {chat_id, chat_state}}
   end
 
   # --- funciones de uso ---

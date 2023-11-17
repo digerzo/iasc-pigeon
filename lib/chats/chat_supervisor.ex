@@ -6,11 +6,9 @@ defmodule Chats.ChatSupervisor do
   end
 
   def init(_init_arg) do
-    {:ok, chat_agent} = Chats.ChatAgent.start_link(%{}, ChatAgent)
-    {:ok, message_cleanup} = MessageCleanup.start_link(%{}, MessageCleanup)
 
     children = [
-      %{id: Chat, start: {Chat, :start_link, [%ChatState{agent_pid: chat_agent, message_cleanup_pid: message_cleanup}, ChatAgusLauti]}, restart: :transient, name: Chat}
+      %{id: Chats.ChatDynamicSupervisor, start: {Chats.ChatDynamicSupervisor, :start_link, [[]]} },
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)
