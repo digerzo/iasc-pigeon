@@ -70,6 +70,17 @@ defmodule GroupChat do
     end
   end
 
+  def handle_cast({:add_user, user_id, new_user = %User{}}, state) do
+    %ChatState{users: current_users, admins: current_admins} = state
+    if Map.has_key?(current_admins, user_id) do
+      updated_users = Map.put(current_users, new_user.id, new_user)
+      new_state = %GroupChatState{state | users: updated_users}
+      {:noreply, new_state}
+    else
+      IO.puts("No tiene permiso para agregar usuarios")
+    end
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -86,6 +97,10 @@ defmodule GroupChat do
 
   def delete_message(chat_pid, message_id, user_id) do
     GenServer.cast(chat_pid, {:delete_message, message_id, user_id})
+  end
+
+  def add_user(chat_pid, user_id, new_user) do
+    GenServer.cast(chat_pid, {:add_user, user_id, new_user_id})
   end
 
 end
