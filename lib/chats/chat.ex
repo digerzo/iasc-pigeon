@@ -6,8 +6,10 @@ defmodule Chat do
     GenServer.start(Chat, %{})
   end
 
-  def start_link(agent_pid, name) do
-    GenServer.start_link(__MODULE__, %ChatState{agent_pid: agent_pid, message_cleanup_pid: nil},  name: name)
+  def start_link(state, name) do
+    GenServer.start_link(__MODULE__,
+     %ChatState{agent_pid: state.agent_pid, message_cleanup_pid: state.message_cleanup_pid},
+      name: name)
   end
 
   def init(state) do
