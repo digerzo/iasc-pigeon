@@ -1,5 +1,3 @@
 defmodule GroupChatState do
-  defstruct messages: %{}
-  defstruct users: %{}
-  defstruct admins: %{}
+  defstruct messages: %{}, users: %{}, admins: %{}
 end

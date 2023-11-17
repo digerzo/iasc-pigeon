@@ -56,6 +56,20 @@ defmodule GroupChat do
     end
   end
 
+  def handle_cast({:delete_message, message_id, user_id}, state) do
+    %ChatState{messages: current_messages, admins: current_admins} = state
+    if Map.has_key?(current_admins, user_id) do
+      case Map.get(current_messages, message_id) do
+        nil -> {:noreply, state}
+        _ ->
+          updated_messages = Map.delete(current_messages, message_id)
+          {:noreply, %ChatState{state | messages: updated_messages}}
+      end
+    else
+      IO.puts("No tiene permiso para eliminar mensajes")
+    end
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -68,6 +82,10 @@ defmodule GroupChat do
 
   def modify_message(chat_pid, message_id, new_text) do
     GenServer.cast(chat_pid, {:modify_message, message_id, new_text})
+  end
+
+  def delete_message(chat_pid, message_id, user_id) do
+    GenServer.cast(chat_pid, {:delete_message, message_id, user_id})
   end
 
 end
