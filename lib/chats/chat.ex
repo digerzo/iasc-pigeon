@@ -36,6 +36,7 @@ defmodule Chat do
     %ChatState{messages: current_messages} = state
     updated_messages = Map.put(current_messages, message.id, message)
     new_state = %ChatState{state | messages: updated_messages}
+    Notification.send_notification(self(), message)
     {:noreply, new_state}
   end
 
@@ -62,6 +63,10 @@ defmodule Chat do
       end
   end
 
+  def handle_info({:new_message, message}) do
+    IO.puts(message)
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -78,6 +83,10 @@ defmodule Chat do
 
   def delete_message(chat_pid, message_id) do
     GenServer.cast(chat_pid, {:delete_message, message_id})
+  end
+
+  def new_message(chat_pid, message) do
+    GenServer.info(chat_pid, {:new_message, message})
   end
 
   # Función para limpiar mensajes expirados
