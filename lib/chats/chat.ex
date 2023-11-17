@@ -36,7 +36,8 @@ defmodule Chat do
     %ChatState{messages: current_messages} = state
     updated_messages = Map.put(current_messages, message.id, message)
     new_state = %ChatState{state | messages: updated_messages}
-    Notification.send_notification(self(), message)
+    # En vez de self() debería mandarse el pid destino. Cómo lo obtenemos?
+    # Notification.send_notification(self(), message)
     {:noreply, new_state}
   end
 

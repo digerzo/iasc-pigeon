@@ -39,7 +39,8 @@ defmodule GroupChat do
     %GroupChatState{messages: current_messages} = state
     updated_messages = Map.put(current_messages, message.id, message)
     new_state = %GroupChatState{state | messages: updated_messages}
-    Notification.send_notification(self(), message)
+    # En vez de self() deberían enviarse la lista de pid destinos. Cómo los obtenemos?
+    # Notification.send_notification(self(), message)
     {:noreply, new_state}
   end
 
