@@ -2,6 +2,8 @@ defmodule Chat do
   use GenServer
   require Logger
 
+  @chat_registry_name :chat_registry_name
+
   def start(_, _) do
     GenServer.start(Chat, %{})
   end
@@ -9,8 +11,8 @@ defmodule Chat do
   def start_link(chat_id, info) do
     GenServer.start_link(__MODULE__,
     {chat_id, info},
-     name: __MODULE__ # via_tuple(chat_id)
-     )
+     name: {:via, Registry, {@chat_registry_name, chat_id, "Chat#{chat_id}"}}
+    )
   end
 
   # child spec
@@ -23,8 +25,20 @@ defmodule Chat do
     }
   end
 
-  def init({chat_id, info}) do
-    {agent_pid, message_cleanup_pid} = info
+  # registry lookup handler
+  def via_tuple(chat_id), do: {:via, Registry, {@chat_registry_name, chat_id}}
+
+  def whereis(chat_id) do
+    case Registry.lookup(@chat_registry_name, chat_id) do
+      [{pid, _}] -> pid
+      [] -> nil
+    end
+  end
+
+  def init({chat_id, _ }) do
+    # {agent_pid, message_cleanup_pid} = info
+    {:ok, agent_pid } = Chats.ChatAgent.start_link(%{}, ChatAgent)
+    {:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, MessageCleanup)
 
     chat_state = %ChatState{
       id: chat_id,
@@ -38,7 +52,7 @@ defmodule Chat do
   ## Callbacks
 
   # Chat.get_messages(pid)
-  def handle_call(:get_messages, _from, {_ , chat_state}) do
+  def handle_call(:get_messages, _from, { _ , chat_state}) do
     {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), chat_state}
   end
 
