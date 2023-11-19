@@ -4,7 +4,7 @@ defmodule Message do
   def new(text, sender, receiver, secure \\ false, expiration_time \\ 20000) do
     id = App.Utils.generate_id() #:os.system_time(:millisecond)
     timestamp = :os.system_time(:millisecond)
-    new_expiration_time = timestamp + expiration_time
+    # new_expiration_time = timestamp + expiration_time
 
     %Message{
       id: id,
@@ -13,7 +13,7 @@ defmodule Message do
       receiver: receiver,
       timestamp: timestamp,
       secure: secure,
-      expiration_time: new_expiration_time
+      expiration_time: expiration_time
     }
   end
 

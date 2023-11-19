@@ -8,7 +8,7 @@ defmodule MessageCleanup do
 
   def init(state) do
     # Programar la primera limpieza
-    Process.send_after(self(), :cleanup, 0)
+    # Process.send_after(self(), :cleanup, 0)
     {:ok, state}
   end
 
@@ -59,5 +59,14 @@ defmodule MessageCleanup do
       end
     end)
   end
+  def handle_cast({:schedule_message_cleanup, {chat_pid, message}}, state) do
+    Process.send_after(chat_pid, {:cleanup_message, message.id}, message.expiration_time)
+    {:noreply, state}
+  end
 
+  # ---- funciones de uso -----
+
+  def schedule_message_cleanup(pid, {chat_pid, message}) do
+    GenServer.cast(pid, {:schedule_message_cleanup, {chat_pid, message}})
+  end
 end

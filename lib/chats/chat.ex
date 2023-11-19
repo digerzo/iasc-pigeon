@@ -46,19 +46,25 @@ defmodule Chat do
       message_cleanup_pid: message_cleanup_pid
     }
 
-    {:ok, {chat_id, chat_state}}
+    {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
   end
 
   ## Callbacks
 
   # Chat.get_messages(pid)
-  def handle_call(:get_messages, _from, { _ , chat_state}) do
-    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), chat_state}
+  def handle_call(:get_messages, _from, { _chat_id , chat_state}) do
+    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), {_chat_id, chat_state}}
+  end
+
+  def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
+    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
+    {:noreply, {chat_id, chat_state}}
   end
 
   # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
   def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
+    MessageCleanup.schedule_message_cleanup(chat_state.message_cleanup_pid, {self(), message})  # aca pensar si en el MessageCleanup se podría almacenar el PID del Chat, para no mandar self()
     {:noreply, {chat_id, chat_state}}
   end
 
