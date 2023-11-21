@@ -18,7 +18,8 @@ defmodule Chats.ChatDynamicSupervisor do
     #Ejemplo para agregar chats:
     # {:ok, pid} = Chats.ChatDynamicSupervisor.start_child()
     spec = { Chat, { chat_id, %{}} }
-    {:ok, _child_pid} = DynamicSupervisor.start_child(__MODULE__, spec)
+    DynamicSupervisor.start_child(__MODULE__, spec)
+    # {:ok, _child_pid}
   end
 
 end
