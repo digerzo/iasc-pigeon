@@ -37,8 +37,8 @@ defmodule Chat do
 
   def init({chat_id, _info }) do
     #{agent_pid, message_cleanup_pid} = info
-    {:ok, agent_pid} = Chats.ChatAgent.start_link(%{}, ChatAgent)
-    {:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, MessageCleanup)
+    {:ok, agent_pid} = Chats.ChatAgent.start_link(%{}, :"chat_agent_#{chat_id}")
+    {:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, :"message_cleanup_#{chat_id}")
 
     chat_state = %ChatState{
       id: chat_id,
