@@ -2,7 +2,7 @@ defmodule Chat do
   use GenServer
   require Logger
 
-  @chat_registry_name :chat_registry_name
+  @chat_registry_name Chats.Registry
 
   def start(_, _) do
     GenServer.start(Chat, %{})
@@ -11,7 +11,7 @@ defmodule Chat do
   def start_link(chat_id, info) do
     GenServer.start_link(__MODULE__,
     {chat_id, info},
-     name: {:via, Registry, {@chat_registry_name, chat_id, "Chat#{chat_id}"}}
+     name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
     )
   end
 
@@ -26,7 +26,7 @@ defmodule Chat do
   end
 
   # registry lookup handler
-  def via_tuple(chat_id), do: {:via, Registry, {@chat_registry_name, chat_id}}
+  def via_tuple(chat_id), do: {:via, Horde.Registry, {@chat_registry_name, chat_id}}
 
   def whereis(chat_id) do
     case Registry.lookup(@chat_registry_name, chat_id) do
@@ -35,10 +35,10 @@ defmodule Chat do
     end
   end
 
-  def init({chat_id, info }) do
+  def init({chat_id, _info }) do
     #{agent_pid, message_cleanup_pid} = info
-    agent_pid = Chats.ChatAgent.start_link(%{}, ChatAgent)
-    message_cleanup_pid = MessageCleanup.start_link(%{}, MessageCleanup)
+    {:ok, agent_pid} = Chats.ChatAgent.start_link(%{}, ChatAgent)
+    {:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, MessageCleanup)
 
     chat_state = %ChatState{
       id: chat_id,
