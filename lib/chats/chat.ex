@@ -87,6 +87,22 @@ defmodule Chat do
     {:noreply, {chat_id, chat_state}}
   end
 
+  @doc """
+   Gracefully end this process
+  """
+  def handle_info(:end_process, {chat_id, info}) do
+    Logger.info("Process terminating... Chat ID: #{chat_id}")
+    {:stop, :normal, {chat_id, info}}
+  end
+
+  @doc """
+   Ungracefully end this process
+  """
+  def handle_info(:kill_process, {chat_id, info}) do
+    Logger.info("Killing Process... Chat ID: #{chat_id}")
+    {:stop, :kill , {chat_id, info}}
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -107,6 +123,14 @@ defmodule Chat do
 
   def delete_messages(chat_pid, message_ids) do
     GenServer.cast(chat_pid, {:delete_messages, message_ids})
+  end
+
+  def close_chat(chat_id) do
+    Process.send_after(chat_id, :end_process, 0)
+  end
+
+  def kill_process(chat_id) do
+    Process.send_after(chat_id, :kill_process, 0)
   end
 
 
