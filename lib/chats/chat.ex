@@ -26,6 +26,7 @@ defmodule Chat do
   end
 
   # registry lookup handler
+  # registry lookup handler
   def via_tuple(chat_id), do: {:via, Horde.Registry, {@chat_registry_name, chat_id}}
 
   def whereis(chat_id) do
@@ -103,6 +104,10 @@ defmodule Chat do
     {:stop, :kill , {chat_id, info}}
   end
 
+  def handle_info({:new_message, message}) do
+    IO.puts(message)
+  end
+
   # --- funciones de uso ---
 
   def get_messages(chat_pid) do
@@ -133,5 +138,13 @@ defmodule Chat do
     Process.send_after(chat_id, :kill_process, 0)
   end
 
+  def new_message(chat_pid, message) do
+    GenServer.info(chat_pid, {:new_message, message})
+  end
+
+  # Función para limpiar mensajes expirados
+  # def cleanup_expired_messages(chat_pid) do
+  #   GenServer.cast(pid, :cleanup_expired_messages)
+  # end
 
 end
