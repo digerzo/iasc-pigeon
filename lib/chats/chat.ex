@@ -35,15 +35,15 @@ defmodule Chat do
     end
   end
 
-  def init({chat_id, _info }) do
+  def init({chat_id, info }) do
     #{agent_pid, message_cleanup_pid} = info
-    {:ok, agent_pid} = Chats.ChatAgent.start_link(%{}, :"chat_agent_#{chat_id}")
-    {:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, :"message_cleanup_#{chat_id}")
+    #{:ok, agent_pid} = Chats.ChatAgent.start_link(%{}, :"chat_agent_#{chat_id}")
+    #{:ok, message_cleanup_pid} = MessageCleanup.start_link(%{}, :"message_cleanup_#{chat_id}")
 
     chat_state = %ChatState{
       id: chat_id,
-      agent_pid: agent_pid,
-      message_cleanup_pid: message_cleanup_pid
+      agent_pid: info.agent_pid,
+      message_cleanup_pid: info.message_cleanup_pid
     }
 
     {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
