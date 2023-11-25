@@ -65,7 +65,7 @@ defmodule Chat do
   # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
   def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
-    MessageCleanup.schedule_message_cleanup(chat_state.message_cleanup_pid, {self(), message})  # aca pensar si en el MessageCleanup se podría almacenar el PID del Chat, para no mandar self()
+    # MessageCleanup.schedule_message_cleanup(chat_state.message_cleanup_pid, {self(), message})  # aca pensar si en el MessageCleanup se podría almacenar el PID del Chat, para no mandar self()
     {:noreply, {chat_id, chat_state}}
   end
 
@@ -131,6 +131,14 @@ defmodule Chat do
 
   def kill_process(chat_id) do
     Process.send_after(chat_id, :kill_process, 0)
+  end
+
+  def handle_call(:business_error, _from, _state) do
+    1/0
+  end
+
+  def business_error(chat_pid) do
+    GenServer.call(chat_pid, :business_error)
   end
 
 
