@@ -21,4 +21,8 @@ defmodule Message do
     %Message{message | text: new_text}
   end
 
+  def secure?(message) do
+    message.secure == true
+  end
+
 end
