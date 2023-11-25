@@ -53,8 +53,8 @@ defmodule Chat do
   ## Callbacks
 
   # Chat.get_messages(pid)
-  def handle_call(:get_messages, _from, { _chat_id , chat_state}) do
-    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), {_chat_id, chat_state}}
+  def handle_call(:get_messages, _from, { chat_id , chat_state}) do
+    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), {chat_id, chat_state}}
   end
 
   def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
@@ -87,17 +87,11 @@ defmodule Chat do
     {:noreply, {chat_id, chat_state}}
   end
 
-  @doc """
-   Gracefully end this process
-  """
   def handle_info(:end_process, {chat_id, info}) do
     Logger.info("Process terminating... Chat ID: #{chat_id}")
     {:stop, :normal, {chat_id, info}}
   end
 
-  @doc """
-   Ungracefully end this process
-  """
   def handle_info(:kill_process, {chat_id, info}) do
     Logger.info("Killing Process... Chat ID: #{chat_id}")
     {:stop, :kill , {chat_id, info}}
