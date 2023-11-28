@@ -10,7 +10,10 @@ defmodule Chats.ChatSupervisor do
     children = [
       #%{id: Chats.ChatDynamicSupervisor, start: {Chats.ChatDynamicSupervisor, :start_link, [[]]} },
       Chats.ChatDynamicSupervisor,
-      Chats.Registry
+      Chats.Registry,
+      #%{id: Chats.ChatAgentDynamicSupervisor, start: {Chats.ChatAgentDynamicSupervisor, :start_link, [[]]} },
+      Chats.ChatAgentDynamicSupervisor,
+      Chats.AgentRegistry
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)

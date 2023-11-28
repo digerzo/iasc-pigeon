@@ -1,9 +1,12 @@
 defmodule Chats.ChatAgent do
   use Agent
 
+  @chat_agent_registry_name Chats.AgentRegistry
+
   def start_link(initial_state \\ %{}, name) do
-    Agent.start_link(fn -> initial_state end, name: name)
+    Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@chat_agent_registry_name, name, "chat_agent_#{name}"}})
   end
+
 
   # Chats.ChatAgent.get_messages(agent_pid)
   def get_messages(agent_pid) do
@@ -43,6 +46,5 @@ defmodule Chats.ChatAgent do
       end)
     end)
   end
-
 
 end
