@@ -39,8 +39,7 @@ defmodule Chat do
 
     chat_state = %ChatState{
       id: chat_id,
-      agent_pid: info.agent_pid,
-      message_cleanup_pid: info.message_cleanup_pid
+      agent_pid: info.agent_pid
     }
 
     {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
@@ -62,9 +61,7 @@ defmodule Chat do
   # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
   def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
-    if Message.secure?(message) do
-      MessageCleanup.schedule_message_cleanup(chat_state.message_cleanup_pid, {self(), message})  # aca pensar si en el MessageCleanup se podría almacenar el PID del Chat, para no mandar self()
-    end
+    MessageCleanup.start_link(self(), message)
     {:noreply, {chat_id, chat_state}}
   end
 

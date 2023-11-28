@@ -1,9 +1,9 @@
 defmodule MessageCleanup do
-  use GenServer
+  use Task
   require Logger
 
-  def start_link(state, name) do
-    GenServer.start_link(__MODULE__, state, name: name)
+  def start_link(chat_pid, message) do
+    Task.start_link(fn -> cleanup(chat_pid, message) end)
   end
 
   def init(state) do
@@ -59,14 +59,11 @@ defmodule MessageCleanup do
       end
     end)
   end
-  def handle_cast({:schedule_message_cleanup, {chat_pid, message}}, state) do
-    Process.send_after(chat_pid, {:cleanup_message, message.id}, message.expiration_time)
-    {:noreply, state}
-  end
 
-  # ---- funciones de uso -----
-
-  def schedule_message_cleanup(pid, {chat_pid, message}) do
-    GenServer.cast(pid, {:schedule_message_cleanup, {chat_pid, message}})
+  def cleanup(chat_pid, message) do
+    if (message.secure) do
+      Process.send_after(chat_pid, {:cleanup_message, message.id}, message.expiration_time)
+    end
+    {:ok}
   end
 end
