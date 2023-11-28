@@ -61,7 +61,10 @@ defmodule Chat do
   # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
   def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
-    MessageCleanup.start_link(self(), message)
+    if Message.secure?(message) do
+      MessageCleanup.start_link_cleanup(self(), message)
+    end
+
     {:noreply, {chat_id, chat_state}}
   end
 
