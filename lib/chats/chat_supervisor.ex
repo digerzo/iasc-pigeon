@@ -13,7 +13,9 @@ defmodule Chats.ChatSupervisor do
       Chats.Registry,
       #%{id: Chats.ChatAgentDynamicSupervisor, start: {Chats.ChatAgentDynamicSupervisor, :start_link, [[]]} },
       Chats.ChatAgentDynamicSupervisor,
-      Chats.AgentRegistry
+      Chats.AgentRegistry,
+      Notifications.NotificationsDynamicSupervisor,
+      Notifications.NotificationsRegistry
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)

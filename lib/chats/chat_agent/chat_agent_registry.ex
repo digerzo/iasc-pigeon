@@ -28,7 +28,7 @@ defmodule Chats.AgentRegistry do
   end
 
   def find_or_create_process(chat_agent_id) do
-    if account_process_exists?(chat_agent_id) do
+    if chat_agent_process_exists?(chat_agent_id) do
       # Registry.lookup(:account_main_registry, chat_agent_id)
       {:ok, Horde.Registry.lookup(__MODULE__, chat_agent_id) |> List.first |> elem(0) }
     else
@@ -36,7 +36,7 @@ defmodule Chats.AgentRegistry do
     end
   end
 
-  def account_process_exists?(chat_agent_id) do
+  def chat_agent_process_exists?(chat_agent_id) do
     case Horde.Registry.lookup(__MODULE__, chat_agent_id) do
       [] -> false
       _ -> true
