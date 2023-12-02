@@ -58,8 +58,8 @@ defmodule Chat do
     {:noreply, {chat_id, chat_state}}
   end
 
-  # Chat.send_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
-  def handle_cast({:send_message, message = %Message{}}, {chat_id, chat_state}) do
+  # Chat.add_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
+  def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
@@ -102,8 +102,8 @@ defmodule Chat do
     GenServer.call(chat_pid, :get_messages)
   end
 
-  def send_message(chat_pid, message) do
-    GenServer.cast(chat_pid, {:send_message, message})
+  def add_message(chat_pid, message) do
+    GenServer.cast(chat_pid, {:add_message, message})
   end
 
   def modify_message(chat_pid, message_id, new_text) do

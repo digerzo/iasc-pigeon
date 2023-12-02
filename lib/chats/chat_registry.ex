@@ -1,6 +1,7 @@
 defmodule Chats.Registry do
 
   use Horde.Registry
+  require Logger
 
   def start_link(_init) do
     Horde.Registry.start_link(__MODULE__, [keys: :unique], name: __MODULE__)
@@ -31,9 +32,13 @@ defmodule Chats.Registry do
   def find_or_create_process(chat_id) do
     if account_process_exists?(chat_id) do
       # Registry.lookup(:account_main_registry, chat_id)
+      Logger.info("found")
       {:ok, Horde.Registry.lookup(__MODULE__, chat_id) |> List.first |> elem(0) }
+
     else
+      Logger.info("created")
       Chats.ChatDynamicSupervisor.start_child
+
     end
   end
 
