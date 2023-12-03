@@ -15,11 +15,10 @@ defmodule Notifications.NotificationsDynamicSupervisor do
 
   def start_child(name) do
     spec = %{
-      id: Notifications,
-      start: {Notifications, :start_link, [%{},name]}
+      id: Notifications.NotificationsAgent,
+      start: {Notifications.NotificationsAgent, :start_link, [%{},name]}
     }
 
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
-
 end

@@ -1,10 +1,12 @@
-defmodule Notifications do
+defmodule Notifications.NotificationsAgent do
   use Agent
+  require Logger
 
   @notifications_registry_name Notifications.NotificationsRegistry
 
   def start_link(initial_state \\ %{}, name) do
-    Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@notifications_registry_name, name, "agent_notifications_#{name}"}})
+    Logger.info("#{name}")
+    {:ok, pid} = Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@notifications_registry_name, name, name}})
   end
 
   # Notifications.get_notifications(pid)
@@ -20,9 +22,9 @@ defmodule Notifications do
   end
 
   # Notifications.add_notification(pid, "Notificacion 1")
-  def add_notification(agent_notifications_pid, notificacion) do
+  def add_notification(agent_notifications_pid, notification) do
     Agent.update(agent_notifications_pid, fn state ->
-      [notificacion | state]
+      [notification | state]
     end)
   end
 
@@ -32,7 +34,4 @@ defmodule Notifications do
       %{}
     end)
   end
-
-
-
 end
