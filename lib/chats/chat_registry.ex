@@ -37,6 +37,9 @@ defmodule Chats.Registry do
     end
   end
 
+  # {:ok, new_pid} = Chats.Registry.find_or_create(["agus", "walter"])
+  # {:ok, new_pid} = Chats.Registry.find_or_create(["walter", "agus"])
+  # producen el mismo resultado
   def find_or_create(users) do
     sorted = Enum.sort(users)
     [first, second] = sorted
