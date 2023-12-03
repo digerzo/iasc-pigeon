@@ -34,8 +34,15 @@ defmodule Chats.Registry do
       # Registry.lookup(:account_main_registry, chat_id)
       {:ok, Horde.Registry.lookup(__MODULE__, chat_id) |> List.first |> elem(0) }
     else
-      Chats.ChatDynamicSupervisor.start_child
+      Chats.ChatDynamicSupervisor.start_child(chat_id)
     end
+  end
+
+  def find_or_create(users) do
+    sorted = Enum.sort(users)
+    [first, second] = sorted
+    key = :"chat_#{first}_#{second}"
+    find_or_create_process(key)
   end
 
   def account_process_exists?(chat_id) do

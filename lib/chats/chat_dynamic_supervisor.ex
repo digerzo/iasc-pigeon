@@ -22,4 +22,10 @@ defmodule Chats.ChatDynamicSupervisor do
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
+  def start_child(chat_id) do
+    {:ok, agent_pid} = Chats.ChatAgentDynamicSupervisor.start_child(%{},:"chat_agent_#{chat_id}")
+    spec = {Chat, {chat_id, %{agent_pid: agent_pid}}}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
 end
