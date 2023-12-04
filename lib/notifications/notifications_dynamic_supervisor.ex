@@ -16,7 +16,7 @@ defmodule Notifications.NotificationsDynamicSupervisor do
   def start_child(name) do
     spec = %{
       id: Notifications.NotificationsAgent,
-      start: {Notifications.NotificationsAgent, :start_link, [%{},name]}
+      start: {Notifications.NotificationsAgent, :start_link, [[],name]}
     }
 
     DynamicSupervisor.start_child(__MODULE__, spec)
