@@ -4,7 +4,7 @@ defmodule Notifications do
   @notifications_registry_name Notifications.NotificationsRegistry
 
   def start_link(initial_state \\ %{}, name) do
-    Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@notifications_registry_name, name, "agent_notifications_#{name}"}})
+    Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@notifications_registry_name, name, "notification_agent_#{name}"}})
   end
 
   # Notifications.get_notifications(pid)

@@ -2,16 +2,20 @@ defmodule User do
   use GenServer
   require Logger
 
-  def start_link(user_id, info, name) do
-    GenServer.start_link(__MODULE__, {user_id, info}, name: name)
+  def log_in(user_id) do
+    start_link(user_id)
   end
 
-  def init({user_id, info}) do
+  def start_link(user_id) do
+    GenServer.start_link(__MODULE__, {user_id}, name: :"user_#{user_id}")
+  end
+
+  def init({user_id}) do
+    {:ok, notification_agent_pid} = Notifications.NotificationsDynamicSupervisor.start_child(user_id)
     user_state = %UserState{
       id: user_id,
-      agent_pid: info.agent_pid
+      agent_pid: notification_agent_pid,
     }
-
     {:ok, {user_state}}
   end
 
