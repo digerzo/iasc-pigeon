@@ -5,7 +5,7 @@ defmodule Pigeon.Application do
 
     children = [
       {Cluster.Supervisor, [topologies(), [name: Pigeon.ClusterSupervisor]]},
-      # Chats.ChatSupervisor
+      Chats.ChatSupervisor
     ]
 
     opts = [strategy: :one_for_one, max_seconds: 5, max_restarts: 3]
