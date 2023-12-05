@@ -51,7 +51,7 @@ defmodule User do
   end
 
   def handle_call({:get_notifications}, _from, {user_state}) do
-    {:reply, Notifications.get_notifications(user_state.agent_pid), {user_state}}
+    {:reply, Notifications.read_notifications(user_state.agent_pid), {user_state}}
   end
 
   # --- Funciones ---
