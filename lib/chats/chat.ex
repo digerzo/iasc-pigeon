@@ -39,7 +39,8 @@ defmodule Chat do
 
     chat_state = %ChatState{
       id: chat_id,
-      agent_pid: info.agent_pid
+      agent_pid: info.agent_pid,
+      notification_agent_pid: info.notification_agent_pid,
     }
 
     {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
@@ -58,13 +59,13 @@ defmodule Chat do
     {:noreply, {chat_id, chat_state}}
   end
 
-  # Chat.add_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
+  # Chat.add_message(pid, Message.new("Hola", %UserState{id: "lauti"}, %UserState{id: "agus"}))
   def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
     Chats.ChatAgent.add_message(chat_state.agent_pid, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
-
+    Notifications.NotificationsTask.start_link(message.sender.id, message.receiver.id)
     {:noreply, {chat_id, chat_state}}
   end
 

@@ -1,4 +1,4 @@
-defmodule Notifications do
+defmodule Notifications.NotificationsAgent do
   use Agent
 
   @notifications_registry_name Notifications.NotificationsRegistry
@@ -20,19 +20,16 @@ defmodule Notifications do
   end
 
   # Notifications.add_notification(pid, "Notificacion 1")
-  def add_notification(agent_notifications_pid, notificacion) do
+  def add_notification(agent_notifications_pid, notification) do
     Agent.update(agent_notifications_pid, fn state ->
-      [notificacion | state]
+      [notification | state]
     end)
   end
 
   # Notifications.delete_notifications(pid)
   def delete_notifications(agent_notifications_pid) do
     Agent.update(agent_notifications_pid, fn _state ->
-      %{}
+      []
     end)
   end
-
-
-
 end
