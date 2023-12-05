@@ -8,18 +8,18 @@ defmodule Chat do
     GenServer.start(Chat, %{})
   end
 
-  def start_link(chat_id, info) do
+  def start_link(chat_id) do
     GenServer.start_link(__MODULE__,
-    {chat_id, info},
-     name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
+    {chat_id},
+     name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "#{chat_id}"}}
     )
   end
 
   # child spec
-  def child_spec({chat_id, info}) do
+  def child_spec({chat_id}) do
     %{
-      id: "chat#{chat_id}",
-      start: {__MODULE__, :start_link, [chat_id, info]},
+      id: "#{chat_id}",
+      start: {__MODULE__, :start_link, [chat_id]},
       type: :worker,
       restart: :transient
     }
@@ -35,15 +35,13 @@ defmodule Chat do
     end
   end
 
-  def init({chat_id, info }) do
-
+  def init({chat_id}) do
+    {:ok, chat_agent_pid} = Chats.ChatAgentDynamicSupervisor.start_child([], chat_id)
     chat_state = %ChatState{
       id: chat_id,
-      agent_pid: info.agent_pid,
-      notification_agent_pid: info.notification_agent_pid,
+      agent_pid: "chat_agent_#{chat_agent_pid}",
     }
-
-    {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
+    {:ok, {chat_state}}
   end
 
 

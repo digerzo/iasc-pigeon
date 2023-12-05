@@ -12,10 +12,7 @@ defmodule User do
 
   def init({user_id}) do
     {:ok, notification_agent_pid} = Notifications.NotificationsDynamicSupervisor.start_child(user_id)
-    user_state = %UserState{
-      id: user_id,
-      agent_pid: notification_agent_pid,
-    }
+    user_state = UserState.new(user_id, notification_agent_pid)
     {:ok, {user_state}}
   end
 
@@ -26,8 +23,23 @@ defmodule User do
     {:reply, Chat.get_messages(chat_pid), {user_state}}
   end
 
-  def handle_cast({:add_message, message = %Message{}}, {user_state}) do
-    {:ok, chat_pid} = find_chat(user_state.id, message.receiver.id)
+  def handle_cast({:add_message, text, receiver, false}, {user_state}) do
+    {:ok, chat_pid} = find_chat(user_state.id, receiver)
+    {:ok, notification_agent_pid} = Notifications.NotificationsRegistry.find_or_create(receiver)
+    receiver_user = UserState.new(receiver, notification_agent_pid)
+    message = Message.new(text, user_state, receiver_user, false)
+    Chat.add_message(chat_pid, message)
+    {:noreply, {user_state}}
+  end
+
+  def handle_cast({:add_message, text, receiver, true, expiration_time}, {user_state}) do
+    {:ok, chat_pid} = find_chat(user_state.id, receiver)
+    {:ok, notification_agent_pid} = Notifications.NotificationsRegistry.find_or_create(receiver)
+    receiver_user = %UserState{
+      id: receiver,
+      agent_pid: notification_agent_pid,
+    }
+    message = Message.new(text, user_state, receiver_user, true, expiration_time)
     Chat.add_message(chat_pid, message)
     {:noreply, {user_state}}
   end
@@ -60,8 +72,12 @@ defmodule User do
     GenServer.call(user_pid, {:get_messages, receiver})
   end
 
-  def send_message(user_pid, message) do
-    GenServer.cast(user_pid, {:add_message, message})
+  def send_message(user_pid, text, receiver, false) do
+    GenServer.cast(user_pid, {:add_message, text, receiver, false})
+  end
+
+  def send_message(user_pid, text, receiver, true, expiration_time) do
+    GenServer.cast(user_pid, {:add_message, text, receiver, true, expiration_time})
   end
 
   def modify_message(user_pid, message_id, new_text, receiver) do

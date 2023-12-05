@@ -3,7 +3,7 @@ defmodule Chats.ChatAgent do
 
   @chat_agent_registry_name Chats.AgentRegistry
 
-  def start_link(initial_state \\ %{}, name) do
+  def start_link(initial_state \\ [], name) do
     Agent.start_link(fn -> initial_state end, name: {:via, Horde.Registry, {@chat_agent_registry_name, name, "chat_agent_#{name}"}})
   end
 

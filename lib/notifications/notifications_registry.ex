@@ -29,15 +29,15 @@ defmodule Notifications.NotificationsRegistry do
 
   def find_or_create(user) do
     key = "notification_agent_#{user}"
-    find_or_create_process(key)
+    find_or_create_process(key, user)
   end
 
   # { :ok, pid } = Notifications.NotificationsRegistry.find_or_create_process("notification_agent_lauti")
-  def find_or_create_process(agent_notifications_id) do
+  def find_or_create_process(agent_notifications_id, user) do
     if notification_agent_process_exists?(agent_notifications_id) do
       {:ok, Horde.Registry.lookup(__MODULE__, agent_notifications_id) |> List.first |> elem(0) }
     else
-        Notifications.NotificationsDynamicSupervisor.start_child(agent_notifications_id)
+        Notifications.NotificationsDynamicSupervisor.start_child(user)
     end
   end
 
