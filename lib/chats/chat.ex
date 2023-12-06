@@ -9,9 +9,10 @@ defmodule Chat do
   end
 
   def start_link(chat_id, info) do
-    GenServer.start_link(__MODULE__,
-    {chat_id, info},
-     name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
+    GenServer.start_link(
+      __MODULE__,
+      {chat_id, info},
+      name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
     )
   end
 
@@ -35,11 +36,10 @@ defmodule Chat do
     end
   end
 
-  def init({chat_id, info }) do
-
+  def init({chat_id, messages}) do
     chat_state = %ChatState{
       id: chat_id,
-      agent_pid: info.agent_pid
+      messages: messages
     }
 
     {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
@@ -50,7 +50,7 @@ defmodule Chat do
 
   # Chat.get_messages(pid)
   def handle_call(:get_messages, _from, { chat_id , chat_state}) do
-    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), {chat_id, chat_state}}
+    {:reply, chat_state.messages, {chat_id, chat_state}}
   end
 
   def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
@@ -58,32 +58,52 @@ defmodule Chat do
     {:noreply, {chat_id, chat_state}}
   end
 
-  # Chat.add_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
+  # Chat.add_message(pid, Message.new("Hola", "agus", "walter"))
   def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
-    Chats.ChatAgent.add_message(chat_state.agent_pid, message)
+    new_messages = save_message(chat_state.messages, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
 
-    {:noreply, {chat_id, chat_state}}
+    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
   end
 
-  # Chat.modify_message(pid, 1700247261156, "AAAAAAAAA")
+  defp save_message(messages = %{}, message = %Message{}) do
+    # agregar aca la replicación en Crdt despues
+    Map.put(messages, message.id, message)
+  end
+
+  # Chat.modify_message(pid,"AiMASfBwwYE=", "AAAAAAAAA")
   def handle_cast({:modify_message, message_id, new_text}, {chat_id, chat_state}) do
-    Chats.ChatAgent.modify_message(chat_state.agent_pid, message_id, new_text)
-    {:noreply, {chat_id, chat_state}}
+    new_messages = update_message(chat_state.messages, message_id, new_text)
+    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  end
+
+  defp update_message(messages, message_id, new_text) do
+    # agregar actualizar en el crdt
+    Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
   end
 
   # Chat.delete_message(pid, 1700247261156)
   def handle_cast({:delete_message, message_id}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
-    {:noreply, {chat_id, chat_state}}
+    new_messages = remove_message(chat_state.messages, message_id)
+    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  end
+
+  defp remove_message(messages = %{}, message_id) do
+    Map.delete(messages, message_id)
   end
 
   # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
   def handle_cast({:delete_messages, message_ids}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_messages(chat_state.agent_pid, message_ids)
-    {:noreply, {chat_id, chat_state}}
+    new_messages = remove_messages(chat_state.messages, message_ids)
+    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  end
+
+  defp remove_messages(messages = %{}, message_ids) do
+    Enum.reduce(message_ids, messages, fn message_id, acc_state ->
+      Map.delete(acc_state, message_id)
+    end)
   end
 
   def handle_info(:end_process, {chat_id, info}) do
