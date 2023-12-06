@@ -27,7 +27,7 @@ defmodule User do
   end
 
   def handle_cast({:add_message, message = %Message{}}, {user_state}) do
-    {:ok, chat_pid} = find_chat(user_state.id, message.receiver.id)
+    {:ok, chat_pid} = find_chat(user_state.id, message.receiver)
     Chat.add_message(chat_pid, message)
     {:noreply, {user_state}}
   end

@@ -64,7 +64,7 @@ defmodule Chat do
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
-    Notifications.NotificationsTask.start_link(message.sender.id, message.receiver.id)
+    Notifications.NotificationsTask.start_link(message.sender, message.receiver)
     {:noreply, {chat_id, chat_state}}
   end
 
