@@ -13,12 +13,12 @@ defmodule Notifications.NotificationsDynamicSupervisor do
     DynamicSupervisor.which_children(__MODULE__)
   end
 
+  # Notifications.NotificationsDynamicSupervisor.start_child(:algo)
   def start_child(name) do
     spec = %{
       id: Notifications,
-      start: {Notifications, :start_link, [%{},name]}
+      start: {Notifications, :start_link, [[],name]}
     }
-
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
