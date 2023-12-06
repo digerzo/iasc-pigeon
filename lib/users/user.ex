@@ -1,6 +1,5 @@
 defmodule User do
   use GenServer
-  require Logger
 
   def log_in(user_id) do
     start_link(user_id)

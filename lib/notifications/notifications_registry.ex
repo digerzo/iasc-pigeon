@@ -1,7 +1,5 @@
 defmodule Notifications.NotificationsRegistry do
-
   use Horde.Registry
-  require Logger
 
   def start_link(_init) do
     Horde.Registry.start_link(__MODULE__, [keys: :unique], name: __MODULE__)
@@ -35,13 +33,9 @@ defmodule Notifications.NotificationsRegistry do
 
   # { :ok, pid } = Notifications.NotificationsRegistry.find_or_create_process("agent_notif_lauti")
   def find_or_create_process(agent_notifications_id, user) do
-    Logger.info("Booleano #{inspect(notification_agent_process_exists?(agent_notifications_id))}")
     if notification_agent_process_exists?(agent_notifications_id) do
-      # Registry.lookup(:account_main_registry, agent_notifications_pid)
-      Logger.info("exist")
       {:ok, Horde.Registry.lookup(__MODULE__, agent_notifications_id) |> List.first |> elem(0) }
     else
-      Logger.info("create")
       Notifications.NotificationsDynamicSupervisor.start_child(user)
     end
   end

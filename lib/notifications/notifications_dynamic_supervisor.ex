@@ -1,6 +1,5 @@
 defmodule Notifications.NotificationsDynamicSupervisor do
   use DynamicSupervisor
-  require Logger
 
   def start_link(_) do
     DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -20,7 +19,6 @@ defmodule Notifications.NotificationsDynamicSupervisor do
       id: Notifications,
       start: {Notifications, :start_link, [[],name]}
     }
-    Logger.info("Se crea agent en dynamic #{inspect(name)}")
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
