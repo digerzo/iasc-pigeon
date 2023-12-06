@@ -8,14 +8,11 @@ defmodule Chats.ChatSupervisor do
   def init(_init_arg) do
 
     children = [
-      #%{id: Chats.ChatDynamicSupervisor, start: {Chats.ChatDynamicSupervisor, :start_link, [[]]} },
+      Notifications.NotificationsDynamicSupervisor,
+      Notifications.NotificationsRegistry,
       Chats.ChatDynamicSupervisor,
       Chats.Registry,
-      #%{id: Chats.ChatAgentDynamicSupervisor, start: {Chats.ChatAgentDynamicSupervisor, :start_link, [[]]} },
-      Chats.ChatAgentDynamicSupervisor,
-      Chats.AgentRegistry,
-      Notifications.NotificationsDynamicSupervisor,
-      Notifications.NotificationsRegistry
+      Chat.Crdt.Supervisor
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)

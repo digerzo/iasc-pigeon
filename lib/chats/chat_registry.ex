@@ -28,7 +28,7 @@ defmodule Chats.Registry do
     |> Enum.map(fn node -> {__MODULE__, node} end)
   end
 
-  # {:ok, new_pid} = Chats.Registry.find_or_create_process("950a6b0282")
+  # {:ok, pid} = Chats.Registry.find_or_create_process("950a6b0282")
   def find_or_create_process(chat_id) do
     if account_process_exists?(chat_id) do
       # Registry.lookup(:account_main_registry, chat_id)
@@ -38,6 +38,7 @@ defmodule Chats.Registry do
     end
   end
 
+  # {:ok, pid} = Chats.Registry.find_or_create_process(["agus", "walter"])
   def find_or_create(users) do
     sorted = Enum.sort(users)
     [first, second] = sorted
