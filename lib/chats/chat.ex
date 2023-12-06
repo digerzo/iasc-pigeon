@@ -42,30 +42,30 @@ defmodule Chat do
       messages: messages
     }
 
-    {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
+    {:ok, chat_state}
   end
 
 
   ## Callbacks
 
   # Chat.get_messages(pid)
-  def handle_call(:get_messages, _from, { chat_id , chat_state}) do
-    {:reply, chat_state.messages, {chat_id, chat_state}}
+  def handle_call(:get_messages, _from, chat_state) do
+    {:reply, chat_state.messages, chat_state}
   end
 
-  def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
-    {:noreply, {chat_id, chat_state}}
+  def handle_info({:cleanup_message, message_id}, %{id: id, messages: messages}) do
+    new_messages = remove_message(messages, message_id)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
   # Chat.add_message(pid, Message.new("Hola", "agus", "walter"))
-  def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
-    new_messages = save_message(chat_state.messages, message)
+  def handle_cast({:add_message, message = %Message{}}, %{id: id, messages: messages}) do
+    new_messages = save_message(messages, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
 
-    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
   defp save_message(messages = %{}, message = %Message{}) do
@@ -74,9 +74,9 @@ defmodule Chat do
   end
 
   # Chat.modify_message(pid,"AiMASfBwwYE=", "AAAAAAAAA")
-  def handle_cast({:modify_message, message_id, new_text}, {chat_id, chat_state}) do
-    new_messages = update_message(chat_state.messages, message_id, new_text)
-    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  def handle_cast({:modify_message, message_id, new_text}, %{id: id, messages: messages}) do
+    new_messages = update_message(messages, message_id, new_text)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
   defp update_message(messages, message_id, new_text) do
@@ -85,9 +85,9 @@ defmodule Chat do
   end
 
   # Chat.delete_message(pid, 1700247261156)
-  def handle_cast({:delete_message, message_id}, {chat_id, chat_state}) do
-    new_messages = remove_message(chat_state.messages, message_id)
-    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  def handle_cast({:delete_message, message_id}, %{id: id, messages: messages}) do
+    new_messages = remove_message(messages, message_id)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
   defp remove_message(messages = %{}, message_id) do
@@ -95,9 +95,9 @@ defmodule Chat do
   end
 
   # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
-  def handle_cast({:delete_messages, message_ids}, {chat_id, chat_state}) do
-    new_messages = remove_messages(chat_state.messages, message_ids)
-    {:noreply, {chat_id, %{id: chat_id, messages: new_messages}}}
+  def handle_cast({:delete_messages, message_ids}, %{id: id, messages: messages}) do
+    new_messages = remove_messages(messages, message_ids)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
   defp remove_messages(messages = %{}, message_ids) do
@@ -106,14 +106,14 @@ defmodule Chat do
     end)
   end
 
-  def handle_info(:end_process, {chat_id, info}) do
-    Logger.info("Process terminating... Chat ID: #{chat_id}")
-    {:stop, :normal, {chat_id, info}}
+  def handle_info(:end_process, chat_state) do
+    Logger.info("Process terminating... Chat ID: #{chat_state.id}")
+    {:stop, :normal, chat_state}
   end
 
-  def handle_info(:kill_process, {chat_id, info}) do
-    Logger.info("Killing Process... Chat ID: #{chat_id}")
-    {:stop, :kill , {chat_id, info}}
+  def handle_info(:kill_process, chat_state) do
+    Logger.info("Killing Process... Chat ID: #{chat_state.id}")
+    {:stop, :kill , chat_state}
   end
 
   # --- funciones de uso ---
