@@ -37,6 +37,15 @@ defmodule ChatGroups.Registry do
     end
   end
 
+  # {:ok, pid} = ChatGroups.Registry.find(:crazy_id)
+  # {:error, msj} = ChatGroups.Registry.find(:algo_que_no_existe)
+  def find(chat_group_id) do
+    case Horde.Registry.lookup(__MODULE__, chat_group_id) do
+      [] -> {:error, "No se pudo encontrar el chat grupal #{chat_group_id}"}
+      chat_groups -> {:ok, chat_groups |> List.first |> elem(0)}
+    end
+  end
+
   def account_process_exists?(chat_group_id) do
     case Horde.Registry.lookup(__MODULE__, chat_group_id) do
       [] -> false
