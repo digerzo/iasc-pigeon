@@ -7,7 +7,7 @@ defmodule Pigeon.Application do
       {Cluster.Supervisor, [topologies(), [name: Pigeon.ClusterSupervisor]]},
       Chats.Supervisor,
       Notifications.Supervisor,
-      Chats.AgentSupervisor,
+      # Chats.AgentSupervisor,
       Pigeon.NodeObserver.Supervisor
     ]
 
