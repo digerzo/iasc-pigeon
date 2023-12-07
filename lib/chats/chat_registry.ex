@@ -1,7 +1,5 @@
 defmodule Chats.Registry do
-
   use Horde.Registry
-  require Logger
 
   def start_link(_init) do
     Horde.Registry.start_link(__MODULE__, [keys: :unique], name: __MODULE__)
@@ -28,13 +26,11 @@ defmodule Chats.Registry do
     |> Enum.map(fn node -> {__MODULE__, node} end)
   end
 
-  # {:ok, new_pid} = Chats.Registry.find_or_create_process("950a6b0282")
   def find_or_create_process(chat_id) do
     if account_process_exists?(chat_id) do
-      # Registry.lookup(:account_main_registry, chat_id)
       {:ok, Horde.Registry.lookup(__MODULE__, chat_id) |> List.first |> elem(0) }
     else
-      Chats.ChatDynamicSupervisor.start_child(chat_id)
+      Chats.DynamicSupervisor.start_child(chat_id)
     end
   end
 
@@ -54,7 +50,7 @@ defmodule Chats.Registry do
 
   @spec chat_ids() :: list()
   def chat_ids do
-    Chats.ChatDynamicSupervisor.which_children
+    Chats.DynamicSupervisor.which_children
     |> Enum.map(fn {_, chat_proc_pid, _, _} ->
       Horde.Registry.keys(__MODULE__, chat_proc_pid)
       |> List.first

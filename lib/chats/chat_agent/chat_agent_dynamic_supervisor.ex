@@ -1,4 +1,4 @@
-defmodule Chats.ChatAgentDynamicSupervisor do
+defmodule Chats.AgentDynamicSupervisor do
   use DynamicSupervisor
 
   def start_link(_) do
@@ -15,8 +15,8 @@ defmodule Chats.ChatAgentDynamicSupervisor do
 
   def start_child(initial_state, name) do
     spec = %{
-      id: Chats.ChatAgent,
-      start: {Chats.ChatAgent, :start_link, [initial_state, name]}
+      id: Chats.Agent,
+      start: {Chats.Agent, :start_link, [initial_state, name]}
     }
 
     DynamicSupervisor.start_child(__MODULE__, spec)
