@@ -38,12 +38,13 @@ defmodule Chats do
 
 
   def init({chat_id, messages}) do
-    chat_state = %Chats.State{
-      id: chat_id,
-      messages: messages
-    }
-
-    {:ok, chat_state}
+    case Chats.Crdt.get_state(chat_id) do
+      nil -> {:ok, %Chats.State{
+        id: chat_id,
+        messages: messages
+      }}
+      existing_state ->{:ok, existing_state}
+    end
   end
 
 
