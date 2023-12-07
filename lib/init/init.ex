@@ -26,15 +26,12 @@ defmodule Init do
   end
 
   def lauti_send_message_to_agus(pid_lauti) do
-    Logger.info("Lauti le envia un mensaje a Agus")
 
     message = Message.new("Hola, que tal?", "lauti", "agus")
     User.send_message(pid_lauti, message)
   end
 
   def lauti_read_his_messages_with_agus(pid_lauti) do
-    Logger.info("Lauti lee sus mensajes con Agus")
-
     User.read_messages(pid_lauti, "agus")
   end
 
@@ -42,16 +39,18 @@ defmodule Init do
     Logger.info("Lauti modifica su mensaje con Agus")
 
     new_text = "Todo bien?"
-    [message] = lauti_read_his_messages_with_agus(pid_lauti)
-    User.modify_message(pid_lauti, message.id, new_text, "agus")
+    map = lauti_read_his_messages_with_agus(pid_lauti)
+    message_id = Map.keys(map) |> List.first()
+    User.modify_message(pid_lauti, message_id, new_text, "agus")
     lauti_read_his_messages_with_agus(pid_lauti)
   end
 
   def lauti_delete_message_with_agus(pid_lauti) do
     Logger.info("Lauti elimina su mensaje con Agus")
 
-    [message] = lauti_read_his_messages_with_agus(pid_lauti)
-    User.delete_message(pid_lauti, message.id, "agus")
+    map = lauti_read_his_messages_with_agus(pid_lauti)
+    message_id = Map.keys(map) |> List.first()
+    User.delete_message(pid_lauti, message_id, "agus")
     lauti_read_his_messages_with_agus(pid_lauti)
   end
 
@@ -73,8 +72,10 @@ defmodule Init do
   def lauti_delete_two_messages_with_agus(pid_lauti) do
     Logger.info("Lauti elimina dos mensajes con Agus")
 
-    [message1, message2, _] = lauti_read_his_messages_with_agus(pid_lauti)
-    User.delete_messages(pid_lauti, [message1.id, message2.id], "agus")
+    map = lauti_read_his_messages_with_agus(pid_lauti)
+    keys = Map.keys(map)
+    messages_ids = Enum.take(keys, 2)
+    User.delete_messages(pid_lauti, messages_ids, "agus")
     lauti_read_his_messages_with_agus(pid_lauti)
   end
 end
