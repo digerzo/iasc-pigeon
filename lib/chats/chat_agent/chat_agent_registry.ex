@@ -32,7 +32,7 @@ defmodule Chats.AgentRegistry do
       # Registry.lookup(:account_main_registry, chat_agent_id)
       {:ok, Horde.Registry.lookup(__MODULE__, chat_agent_id) |> List.first |> elem(0) }
     else
-      chat_agent_id |> Chats.ChatAgentDynamicSupervisor.start_child(&("chat_agent_#{&1}"))
+      chat_agent_id |> Chats.AgentDynamicSupervisor.start_child(&("chat_agent_#{&1}"))
     end
   end
 
@@ -44,7 +44,7 @@ defmodule Chats.AgentRegistry do
   end
 
   def chat_agent_ids do
-    Chats.ChatAgentDynamicSupervisor.which_children
+    Chats.AgentDynamicSupervisor.which_children
     |> Enum.map(fn {_, chat_agent_proc_pid, _, _} ->
       Horde.Registry.keys(__MODULE__, chat_agent_proc_pid)
       |> List.first
