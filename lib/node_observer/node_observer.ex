@@ -40,12 +40,12 @@ defmodule Pigeon.NodeObserver do
 
   defp refresh_members() do
         # supervisors
-        set_members(Chats.ChatDynamicSupervisor)
-        set_members(Notifications.NotificationsDynamicSupervisor)
+        set_members(Chats.DynamicSupervisor)
+        set_members(Notifications.DynamicSupervisor)
 
         # registries
         set_members(Chats.Registry)
-        set_members(Notifications.NotificationsRegistry)
+        set_members(Notifications.Registry)
   end
 
   defp set_members(name) do
