@@ -58,6 +58,11 @@ defmodule User do
     {:noreply, {user_state}}
   end
 
+  def handle_call({:get_messages_group, chat_group_id}, {user_state}) do
+    {:ok, chat_group_pid} = find_chat_group(chat_group_id)
+    {:reply, ChatGroups.get_messages(chat_group_pid) ,{user_state}}
+  end
+
   def handle_cast({:add_message_group, message = %Message{}, chat_group_id}, {user_state}) do
     {:ok, chat_group_pid} = find_chat_group(chat_group_id)
     modified_message = %{message | receiver: chat_group_id}
@@ -124,6 +129,10 @@ defmodule User do
 
   def create_group(user_pid, chat_group_id) do
     GenServer.cast(user_pid, {:create_group, chat_group_id})
+  end
+
+  def read_messages_group(user_pid, chat_group_id) do
+    GenServer.call(user_pid, {:get_messages_group, chat_group_id})
   end
 
   def send_message_group(user_pid, message, chat_group_id) do
