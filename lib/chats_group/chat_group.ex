@@ -37,15 +37,15 @@ defmodule ChatGroups do
   end
 
   def init({chat_group_id, chat_group_state}) do
-
-    chat_group_state = %ChatGroups.State{
-      id: chat_group_id,
-      messages: chat_group_state.messages ,
-      participants: chat_group_state.participants,
-      admins:  chat_group_state.admins
-    }
-
-    {:ok, chat_group_state}
+    case Chats.Crdt.get_state(chat_group_id) do
+      nil -> {:ok, %ChatGroups.State{
+        id: chat_group_id,
+        messages: chat_group_state.messages ,
+        participants: chat_group_state.participants,
+        admins:  chat_group_state.admins
+      }}
+      existing_state ->{:ok, existing_state}
+    end
   end
 
   ## Callbacks
@@ -57,26 +57,23 @@ defmodule ChatGroups do
 
   # ChatGroups.add_message(grupo, Message.new("Hola", "agus", "lospibes"))
   def handle_cast({:add_message, message = %Message{}}, chat_group_state) do
-    new_messages = save_message(chat_group_state.messages, message)
+    new_state = save_message(chat_group_state, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
     notify_participants(chat_group_state)
-    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
     {:noreply, new_state}
   end
 
   # ChatGroups.modify_message(grupo,"QTy6oPagLyc=","HOLAAAA")
   def handle_cast({:modify_message, message_id, new_text}, chat_group_state) do
-    new_messages = update_message(chat_group_state.messages, message_id, new_text)
-    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    new_state = update_message(chat_group_state, message_id, new_text)
     {:noreply, new_state}
   end
 
   # ChatGroups.delete_message(grupo,"QTy6oPagLyc=")
   def handle_cast({:delete_message, message_id}, chat_group_state) do
-    new_messages = remove_message(chat_group_state.messages, message_id)
-    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    new_state = remove_message(chat_group_state, message_id)
     {:noreply, new_state}
   end
 
@@ -92,6 +89,7 @@ defmodule ChatGroups do
       _admin ->
         new_participants = chat_group_state.participants ++ [participant]
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants}
+        Chats.Crdt.save_state(chat_group_state.id, new_state)
         {:reply, new_participants, new_state}
     end
   end
@@ -104,6 +102,7 @@ defmodule ChatGroups do
         new_participants = Enum.reject(chat_group_state.participants, &(&1 == participant))
         new_admins = Enum.reject(chat_group_state.admins, &(&1 == participant))
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants, admins: new_admins }
+        Chats.Crdt.save_state(chat_group_state.id, new_state)
         {:reply, new_participants, new_state}
     end
   end
@@ -120,6 +119,7 @@ defmodule ChatGroups do
 
         new_admins = chat_group_state.admins ++ [participant]
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants, admins: new_admins}
+        Chats.Crdt.save_state(chat_group_state.id, new_state)
         {:reply, new_admins,  new_state}
     end
   end
@@ -178,24 +178,31 @@ defmodule ChatGroups do
     Enum.find(participants, &(&1 == user_id))
   end
 
-  defp save_message(messages = %{}, message = %Message{}) do
-    # agregar aca la replicación en Crdt despues
-    Map.put(messages, message.id, message)
+  defp save_message(chat_group_state = %ChatGroups.State{}, message = %Message{}) do
+    new_messages = Map.put(chat_group_state.messages, message.id, message)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    Chats.Crdt.save_state(chat_group_state.id, new_state)
+    new_state
+  end
+
+  defp update_message(chat_group_state = %ChatGroups.State{}, message_id, new_text) do
+    new_messages = Map.update!(chat_group_state.messages, message_id, fn message -> Map.put(message, :text, new_text) end)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    Chats.Crdt.save_state(chat_group_state.id, new_state)
+    new_state
+  end
+
+  defp remove_message(chat_group_state = %ChatGroups.State{}, message_id) do
+    new_messages = Map.delete(chat_group_state.messages, message_id)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    Chats.Crdt.save_state(chat_group_state.id, new_state)
+    new_state
   end
 
   defp notify_participants(chat_group_state) do
     Enum.each(chat_group_state.participants, fn participant ->
       Notifications.Task.start_link(chat_group_state.id, participant)
     end)
-  end
-
-  defp update_message(messages, message_id, new_text) do
-    # agregar actualizar en el crdt
-    Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
-  end
-
-  defp remove_message(messages = %{}, message_id) do
-    Map.delete(messages, message_id)
   end
 
 end
