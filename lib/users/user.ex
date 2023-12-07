@@ -10,8 +10,8 @@ defmodule User do
   end
 
   def init({user_id}) do
-    {:ok, notification_agent_pid} = Notifications.NotificationsDynamicSupervisor.start_child(user_id)
-    user_state = %UserState{
+    {:ok, notification_agent_pid} = Notifications.DynamicSupervisor.start_child(user_id)
+    user_state = %User.State{
       id: user_id,
       agent_pid: notification_agent_pid,
     }
@@ -22,35 +22,35 @@ defmodule User do
 
   def handle_call({:get_messages, receiver}, _from, {user_state}) do
     {:ok, chat_pid} = find_chat(user_state.id, receiver)
-    {:reply, Chat.get_messages(chat_pid), {user_state}}
+    {:reply, Chats.get_messages(chat_pid), {user_state}}
   end
 
   def handle_cast({:add_message, message = %Message{}}, {user_state}) do
     {:ok, chat_pid} = find_chat(user_state.id, message.receiver)
-    Chat.add_message(chat_pid, message)
+    Chats.add_message(chat_pid, message)
     {:noreply, {user_state}}
   end
 
   def handle_cast({:modify_message, message_id, new_text, receiver}, {user_state}) do
     {:ok, chat_pid} = find_chat(user_state.id, receiver)
-    Chat.modify_message(chat_pid, message_id, new_text)
+    Chats.modify_message(chat_pid, message_id, new_text)
     {:noreply, {user_state}}
   end
 
   def handle_cast({:delete_message, message_id, receiver}, {user_state}) do
     {:ok, chat_pid} = find_chat(user_state.id, receiver)
-    Chat.delete_message(chat_pid, message_id)
+    Chats.delete_message(chat_pid, message_id)
     {:noreply, {user_state}}
   end
 
   def handle_cast({:delete_messages, message_ids, receiver}, {user_state}) do
     {:ok, chat_pid} = find_chat(user_state.id, receiver)
-    Chat.delete_messages(chat_pid, message_ids)
+    Chats.delete_messages(chat_pid, message_ids)
     {:noreply, {user_state}}
   end
 
   def handle_call({:get_notifications}, _from, {user_state}) do
-    {:reply, Notifications.read_notifications(user_state.agent_pid), {user_state}}
+    {:reply, Notifications.Agent.read_notifications(user_state.agent_pid), {user_state}}
   end
 
   # --- Funciones ---

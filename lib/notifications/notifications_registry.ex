@@ -1,4 +1,4 @@
-defmodule Notifications.NotificationsRegistry do
+defmodule Notifications.Registry do
   use Horde.Registry
 
   def start_link(_init) do
@@ -36,7 +36,7 @@ defmodule Notifications.NotificationsRegistry do
     if notification_agent_process_exists?(agent_notifications_id) do
       {:ok, Horde.Registry.lookup(__MODULE__, agent_notifications_id) |> List.first |> elem(0) }
     else
-      Notifications.NotificationsDynamicSupervisor.start_child(user)
+      Notifications.DynamicSupervisor.start_child(user)
     end
   end
 
@@ -48,7 +48,7 @@ defmodule Notifications.NotificationsRegistry do
   end
 
   def agent_notifications_ids do
-    Notifications.NotificationsDynamicSupervisor.which_children
+    Notifications.DynamicSupervisor.which_children
     |> Enum.map(fn {_, agent_notifications_proc_pid, _, _} ->
       Horde.Registry.keys(__MODULE__, agent_notifications_proc_pid)
       |> List.first

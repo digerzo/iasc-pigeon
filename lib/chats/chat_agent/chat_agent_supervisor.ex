@@ -1,4 +1,4 @@
-defmodule Chats.Supervisor do
+defmodule Chats.AgentSupervisor do
   use Supervisor
 
   def start_link(init_arg) do
@@ -8,9 +8,8 @@ defmodule Chats.Supervisor do
   def init(_init_arg) do
 
     children = [
-      Chats.DynamicSupervisor,
-      Chats.Registry,
-      #Chat.Crdt.Supervisor
+      Chats.AgentDynamicSupervisor,
+      Chats.AgentRegistry,
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)
