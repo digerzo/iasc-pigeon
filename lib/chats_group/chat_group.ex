@@ -94,13 +94,9 @@ defmodule ChatGroups do
     case find_admin(admin, chat_group_state) do
       nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
       _admin ->
-        new_participants =
-          case find_participant(participant, chat_group_state) do
-            nil -> chat_group_state.participants
-            _participant -> Enum.reject(chat_group_state.participants, &(&1 == participant))
-          end
-
-        new_state = %ChatGroups.State{chat_group_state | participants: new_participants}
+        new_participants = Enum.reject(chat_group_state.participants, &(&1 == participant))
+        new_admins = Enum.reject(chat_group_state.admins, &(&1 == participant))
+        new_state = %ChatGroups.State{chat_group_state | participants: new_participants, admins: new_admins }
         {:reply, new_participants, new_state}
     end
   end
