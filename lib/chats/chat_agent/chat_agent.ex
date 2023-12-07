@@ -1,4 +1,4 @@
-defmodule Chats.ChatAgent do
+defmodule Chats.Agent do
   use Agent
 
   @chat_agent_registry_name Chats.AgentRegistry

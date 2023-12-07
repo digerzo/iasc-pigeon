@@ -1,4 +1,4 @@
-defmodule Notifications.NotificationsDynamicSupervisor do
+defmodule Notifications.DynamicSupervisor do
   use DynamicSupervisor
 
   def start_link(_) do
@@ -16,8 +16,8 @@ defmodule Notifications.NotificationsDynamicSupervisor do
   # Notifications.NotificationsDynamicSupervisor.start_child(:algo)
   def start_child(name) do
     spec = %{
-      id: Notifications,
-      start: {Notifications, :start_link, [[],name]}
+      id: Notifications.Agent,
+      start: {Notifications.Agent, :start_link, [[],name]}
     }
     DynamicSupervisor.start_child(__MODULE__, spec)
   end

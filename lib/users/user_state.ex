@@ -1,7 +1,7 @@
-defmodule UserState do
+defmodule User.State do
   defstruct [:id, :agent_pid]
 
   def new(id, agent_pid) do
-    %UserState{id: id, agent_pid: agent_pid}
+    %User.State{id: id, agent_pid: agent_pid}
   end
 end

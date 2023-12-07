@@ -1,11 +1,11 @@
-defmodule Chat do
+defmodule Chats do
   use GenServer
   require Logger
 
   @chat_registry_name Chats.Registry
 
   def start(_, _) do
-    GenServer.start(Chat, %{})
+    GenServer.start(Chats, %{})
   end
 
   def start_link(chat_id, info) do
@@ -37,7 +37,7 @@ defmodule Chat do
 
   def init({chat_id, info }) do
 
-    chat_state = %ChatState{
+    chat_state = %Chats.State{
       id: chat_id,
       agent_pid: info.agent_pid
     }
@@ -50,39 +50,39 @@ defmodule Chat do
 
   # Chat.get_messages(pid)
   def handle_call(:get_messages, _from, { chat_id , chat_state}) do
-    {:reply, Chats.ChatAgent.get_messages(chat_state.agent_pid), {chat_id, chat_state}}
+    {:reply, Chats.Agent.get_messages(chat_state.agent_pid), {chat_id, chat_state}}
   end
 
   def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
+    Chats.Agent.delete_message(chat_state.agent_pid, message_id)
     {:noreply, {chat_id, chat_state}}
   end
 
   # Chat.add_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
   def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
-    Chats.ChatAgent.add_message(chat_state.agent_pid, message)
+    Chats.Agent.add_message(chat_state.agent_pid, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
-    Notifications.NotificationsTask.start_link(message.sender, message.receiver)
+    Notifications.Task.start_link(message.sender, message.receiver)
     {:noreply, {chat_id, chat_state}}
   end
 
   # Chat.modify_message(pid, 1700247261156, "AAAAAAAAA")
   def handle_cast({:modify_message, message_id, new_text}, {chat_id, chat_state}) do
-    Chats.ChatAgent.modify_message(chat_state.agent_pid, message_id, new_text)
+    Chats.Agent.modify_message(chat_state.agent_pid, message_id, new_text)
     {:noreply, {chat_id, chat_state}}
   end
 
   # Chat.delete_message(pid, 1700247261156)
   def handle_cast({:delete_message, message_id}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_message(chat_state.agent_pid, message_id)
+    Chats.Agent.delete_message(chat_state.agent_pid, message_id)
     {:noreply, {chat_id, chat_state}}
   end
 
   # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
   def handle_cast({:delete_messages, message_ids}, {chat_id, chat_state}) do
-    Chats.ChatAgent.delete_messages(chat_state.agent_pid, message_ids)
+    Chats.Agent.delete_messages(chat_state.agent_pid, message_ids)
     {:noreply, {chat_id, chat_state}}
   end
 
