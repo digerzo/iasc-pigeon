@@ -50,10 +50,12 @@ defmodule ChatGroups do
 
   ## Callbacks
 
+  # ChatGroups.get_messages(grupo)
   def handle_call(:get_messages, _from, chat_group_state) do
     {:reply, chat_group_state.messages, chat_group_state}
   end
 
+  # ChatGroups.add_message(grupo, Message.new("Hola", "agus", "lospibes"))
   def handle_cast({:add_message, message = %Message{}}, chat_group_state) do
     new_messages = save_message(chat_group_state.messages, message)
     if Message.secure?(message) do
@@ -64,22 +66,26 @@ defmodule ChatGroups do
     {:noreply, new_state}
   end
 
+  # ChatGroups.modify_message(grupo,"QTy6oPagLyc=","HOLAAAA")
   def handle_cast({:modify_message, message_id, new_text}, chat_group_state) do
     new_messages = update_message(chat_group_state.messages, message_id, new_text)
     new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
     {:noreply, new_state}
   end
 
+  # ChatGroups.delete_message(grupo,"QTy6oPagLyc=")
   def handle_cast({:delete_message, message_id}, chat_group_state) do
     new_messages = remove_message(chat_group_state.messages, message_id)
     new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
     {:noreply, new_state}
   end
 
+  # ChatGroups.get_participants(grupo)
   def handle_call(:get_participants, _from, chat_group_state) do
     {:reply, chat_group_state.participants, chat_group_state}
   end
 
+  # ChatGroups.add_participant(grupo, "user1", "user2") -> user1 siendo admin.
   def handle_call({:add_participant, admin, participant}, _from, chat_group_state) do
     case find_admin(admin, chat_group_state) do
       nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
@@ -90,6 +96,7 @@ defmodule ChatGroups do
     end
   end
 
+  # ChatGroups.delete_participant(grupo, "user1", "user2") -> user1 siendo admin.
   def handle_call({:delete_participant, admin, participant}, _from, chat_group_state) do
     case find_admin(admin, chat_group_state) do
       nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
@@ -100,7 +107,6 @@ defmodule ChatGroups do
         {:reply, new_participants, new_state}
     end
   end
-
 
   def handle_call({:give_administrator_privileges, admin, participant}, _from, chat_group_state) do
     case find_admin(admin, chat_group_state) do
@@ -118,7 +124,7 @@ defmodule ChatGroups do
     end
   end
 
-
+  # ChatGroups.get_admins(grupo)
   def handle_call(:get_admins, _from, chat_group_state) do
     {:reply, chat_group_state.admins, chat_group_state}
   end
