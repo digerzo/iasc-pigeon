@@ -36,7 +36,7 @@ defmodule Chats.DynamicSupervisor do
   # {:ok, pid} = Chats.ChatDynamicSupervisor.start_child(:chat_agus_walter)
   def start_child(chat_id) do
     # {:ok, agent_pid} = Chats.ChatAgentDynamicSupervisor.start_child(%{},:"chat_agent_#{chat_id}")
-    spec = {Chat, {chat_id, %{}}}
+    spec = {Chats, {chat_id, %{}}}
     Horde.DynamicSupervisor.start_child(__MODULE__, spec)
 
   end

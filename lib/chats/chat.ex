@@ -38,7 +38,7 @@ defmodule Chats do
 
 
   def init({chat_id, messages}) do
-    chat_state = %ChatState{
+    chat_state = %Chats.State{
       id: chat_id,
       messages: messages
     }
@@ -49,7 +49,7 @@ defmodule Chats do
 
   ## Callbacks
 
-  # Chat.get_messages(pid)
+  # Chats.get_messages(pid)
   def handle_call(:get_messages, _from, chat_state) do
     {:reply, chat_state.messages, chat_state}
   end
@@ -59,7 +59,7 @@ defmodule Chats do
     {:noreply, %{id: id, messages: new_messages}}
   end
 
-  # Chat.add_message(pid, Message.new("Hola", "agus", "walter"))
+  # Chats.add_message(pid, Message.new("Hola", "agus", "walter"))
   def handle_cast({:add_message, message = %Message{}}, %{id: id, messages: messages}) do
     new_messages = save_message(messages, message)
     if Message.secure?(message) do
@@ -74,7 +74,7 @@ defmodule Chats do
     Map.put(messages, message.id, message)
   end
 
-  # Chat.modify_message(pid,"AiMASfBwwYE=", "AAAAAAAAA")
+  # Chats.modify_message(pid,"8h/ocF5Psrc=", "AAAAAAAAA")
   def handle_cast({:modify_message, message_id, new_text}, %{id: id, messages: messages}) do
     new_messages = update_message(messages, message_id, new_text)
     {:noreply, %{id: id, messages: new_messages}}
@@ -85,7 +85,7 @@ defmodule Chats do
     Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
   end
 
-  # Chat.delete_message(pid, 1700247261156)
+  # Chats.delete_message(pid, 1700247261156)
   def handle_cast({:delete_message, message_id}, %{id: id, messages: messages}) do
     new_messages = remove_message(messages, message_id)
     {:noreply, %{id: id, messages: new_messages}}
@@ -95,7 +95,7 @@ defmodule Chats do
     Map.delete(messages, message_id)
   end
 
-  # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
+  # Chats.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
   def handle_cast({:delete_messages, message_ids}, %{id: id, messages: messages}) do
     new_messages = remove_messages(messages, message_ids)
     {:noreply, %{id: id, messages: new_messages}}
