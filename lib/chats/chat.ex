@@ -1,11 +1,11 @@
-defmodule Chat do
+defmodule Chats do
   use GenServer
   require Logger
 
   @chat_registry_name Chats.Registry
 
   def start(_, _) do
-    GenServer.start(Chat, %{})
+    GenServer.start(Chats, %{})
   end
 
   def start_link(chat_id, info) do
@@ -36,6 +36,7 @@ defmodule Chat do
     end
   end
 
+
   def init({chat_id, messages}) do
     chat_state = %ChatState{
       id: chat_id,
@@ -64,7 +65,7 @@ defmodule Chat do
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
-
+    Notifications.Task.start_link(message.sender, message.receiver)
     {:noreply, %{id: id, messages: new_messages}}
   end
 
@@ -104,6 +105,7 @@ defmodule Chat do
     Enum.reduce(message_ids, messages, fn message_id, acc_state ->
       Map.delete(acc_state, message_id)
     end)
+
   end
 
   def handle_info(:end_process, chat_state) do

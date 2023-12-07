@@ -1,4 +1,4 @@
-defmodule Notifications.NotificationsDynamicSupervisor do
+defmodule Notifications.DynamicSupervisor do
   use Horde.DynamicSupervisor
 
   def start_link(opts) do
@@ -27,11 +27,11 @@ defmodule Notifications.NotificationsDynamicSupervisor do
   # Notifications.NotificationsDynamicSupervisor.start_child(:algo)
   def start_child(name) do
     spec = %{
-      id: Notifications,
-      start: {Notifications, :start_link, [%{},name]}
+      id: Notifications.Agent,
+      start: {Notifications.Agent, :start_link, [[],name]}
     }
-
     Horde.DynamicSupervisor.start_child(__MODULE__, spec)
+
   end
 
 end

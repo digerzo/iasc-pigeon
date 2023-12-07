@@ -1,5 +1,4 @@
-defmodule Notifications.NotificationsRegistry do
-
+defmodule Notifications.Registry do
   use Horde.Registry
 
   def start_link(_init) do
@@ -27,13 +26,17 @@ defmodule Notifications.NotificationsRegistry do
     |> Enum.map(fn node -> {__MODULE__, node} end)
   end
 
+  def find_or_create(user) do
+    key = "notification_agent_#{user}"
+    find_or_create_process(key, user)
+  end
+
   # { :ok, pid } = Notifications.NotificationsRegistry.find_or_create_process("agent_notif_lauti")
-  def find_or_create_process(agent_notifications_id) do
+  def find_or_create_process(agent_notifications_id, user) do
     if notification_agent_process_exists?(agent_notifications_id) do
-      # Registry.lookup(:account_main_registry, agent_notifications_pid)
       {:ok, Horde.Registry.lookup(__MODULE__, agent_notifications_id) |> List.first |> elem(0) }
     else
-      agent_notifications_id |> Notifications.NotificationsDynamicSupervisor.start_child()
+      Notifications.DynamicSupervisor.start_child(user)
     end
   end
 
@@ -45,7 +48,7 @@ defmodule Notifications.NotificationsRegistry do
   end
 
   def agent_notifications_ids do
-    Notifications.NotificationsDynamicSupervisor.which_children
+    Notifications.DynamicSupervisor.which_children
     |> Enum.map(fn {_, agent_notifications_proc_pid, _, _} ->
       Horde.Registry.keys(__MODULE__, agent_notifications_proc_pid)
       |> List.first

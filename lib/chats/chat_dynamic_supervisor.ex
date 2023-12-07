@@ -1,4 +1,4 @@
-defmodule Chats.ChatDynamicSupervisor do
+defmodule Chats.DynamicSupervisor do
   use Horde.DynamicSupervisor
 
   def start_link(opts) do
@@ -38,6 +38,7 @@ defmodule Chats.ChatDynamicSupervisor do
     # {:ok, agent_pid} = Chats.ChatAgentDynamicSupervisor.start_child(%{},:"chat_agent_#{chat_id}")
     spec = {Chat, {chat_id, %{}}}
     Horde.DynamicSupervisor.start_child(__MODULE__, spec)
+
   end
 
 end
