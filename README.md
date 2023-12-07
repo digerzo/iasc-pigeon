@@ -70,3 +70,4 @@ Respecto a los componentes de replicación y administración del Nodo, podemos e
 * Cluster.Supervisor -> encargado de gestionar la comunicación del Horde Cluster.
 * Pigeon.Node.Observer -> encargado de monitorear el ingreso y egreso de nodos al cluster, actualizando los members de los actores para una correcta distribució y replicación.
 * Chats.Crdt -> abstracción encargada de funcionar como un key value storage, donde almacenamos tanto el estado de cada ChatGroups como de cada Chats. Se encarga de replicar el estado a todos los nodos del cluster.
+![alt text](https://github.com/digerzo/iasc-pigeon/blob/master/Diagrama%20de%20Arquitectura.png)
