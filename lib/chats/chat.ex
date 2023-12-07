@@ -9,9 +9,10 @@ defmodule Chats do
   end
 
   def start_link(chat_id, info) do
-    GenServer.start_link(__MODULE__,
-    {chat_id, info},
-     name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
+    GenServer.start_link(
+      __MODULE__,
+      {chat_id, info},
+      name: {:via, Horde.Registry, {@chat_registry_name, chat_id, "chat#{chat_id}"}}
     )
   end
 
@@ -35,65 +36,86 @@ defmodule Chats do
     end
   end
 
-  def init({chat_id, info }) do
 
-    chat_state = %Chats.State{
+  def init({chat_id, messages}) do
+    chat_state = %ChatState{
       id: chat_id,
-      agent_pid: info.agent_pid
+      messages: messages
     }
 
-    {:ok, {chat_id, chat_state}}  # TODO aca podriamos devolver oslo el chat_state, que ya tiene el id
+    {:ok, chat_state}
   end
 
 
   ## Callbacks
 
   # Chat.get_messages(pid)
-  def handle_call(:get_messages, _from, { chat_id , chat_state}) do
-    {:reply, Chats.Agent.get_messages(chat_state.agent_pid), {chat_id, chat_state}}
+  def handle_call(:get_messages, _from, chat_state) do
+    {:reply, chat_state.messages, chat_state}
   end
 
-  def handle_info({:cleanup_message, message_id}, {chat_id, chat_state}) do
-    Chats.Agent.delete_message(chat_state.agent_pid, message_id)
-    {:noreply, {chat_id, chat_state}}
+  def handle_info({:cleanup_message, message_id}, %{id: id, messages: messages}) do
+    new_messages = remove_message(messages, message_id)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
-  # Chat.add_message(pid, Message.new("Hola", %User{id: "lauti"}, %User{id: "agus"}))
-  def handle_cast({:add_message, message = %Message{}}, {chat_id, chat_state}) do
-    Chats.Agent.add_message(chat_state.agent_pid, message)
+  # Chat.add_message(pid, Message.new("Hola", "agus", "walter"))
+  def handle_cast({:add_message, message = %Message{}}, %{id: id, messages: messages}) do
+    new_messages = save_message(messages, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
     Notifications.Task.start_link(message.sender, message.receiver)
-    {:noreply, {chat_id, chat_state}}
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
-  # Chat.modify_message(pid, 1700247261156, "AAAAAAAAA")
-  def handle_cast({:modify_message, message_id, new_text}, {chat_id, chat_state}) do
-    Chats.Agent.modify_message(chat_state.agent_pid, message_id, new_text)
-    {:noreply, {chat_id, chat_state}}
+  defp save_message(messages = %{}, message = %Message{}) do
+    # agregar aca la replicación en Crdt despues
+    Map.put(messages, message.id, message)
+  end
+
+  # Chat.modify_message(pid,"AiMASfBwwYE=", "AAAAAAAAA")
+  def handle_cast({:modify_message, message_id, new_text}, %{id: id, messages: messages}) do
+    new_messages = update_message(messages, message_id, new_text)
+    {:noreply, %{id: id, messages: new_messages}}
+  end
+
+  defp update_message(messages, message_id, new_text) do
+    # agregar actualizar en el crdt
+    Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
   end
 
   # Chat.delete_message(pid, 1700247261156)
-  def handle_cast({:delete_message, message_id}, {chat_id, chat_state}) do
-    Chats.Agent.delete_message(chat_state.agent_pid, message_id)
-    {:noreply, {chat_id, chat_state}}
+  def handle_cast({:delete_message, message_id}, %{id: id, messages: messages}) do
+    new_messages = remove_message(messages, message_id)
+    {:noreply, %{id: id, messages: new_messages}}
+  end
+
+  defp remove_message(messages = %{}, message_id) do
+    Map.delete(messages, message_id)
   end
 
   # Chat.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
-  def handle_cast({:delete_messages, message_ids}, {chat_id, chat_state}) do
-    Chats.Agent.delete_messages(chat_state.agent_pid, message_ids)
-    {:noreply, {chat_id, chat_state}}
+  def handle_cast({:delete_messages, message_ids}, %{id: id, messages: messages}) do
+    new_messages = remove_messages(messages, message_ids)
+    {:noreply, %{id: id, messages: new_messages}}
   end
 
-  def handle_info(:end_process, {chat_id, info}) do
-    Logger.info("Process terminating... Chat ID: #{chat_id}")
-    {:stop, :normal, {chat_id, info}}
+  defp remove_messages(messages = %{}, message_ids) do
+    Enum.reduce(message_ids, messages, fn message_id, acc_state ->
+      Map.delete(acc_state, message_id)
+    end)
+
   end
 
-  def handle_info(:kill_process, {chat_id, info}) do
-    Logger.info("Killing Process... Chat ID: #{chat_id}")
-    {:stop, :kill , {chat_id, info}}
+  def handle_info(:end_process, chat_state) do
+    Logger.info("Process terminating... Chat ID: #{chat_state.id}")
+    {:stop, :normal, chat_state}
+  end
+
+  def handle_info(:kill_process, chat_state) do
+    Logger.info("Killing Process... Chat ID: #{chat_state.id}")
+    {:stop, :kill , chat_state}
   end
 
   # --- funciones de uso ---

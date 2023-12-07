@@ -10,6 +10,7 @@ defmodule Chats.Supervisor do
     children = [
       Chats.DynamicSupervisor,
       Chats.Registry,
+      Chat.Crdt.Supervisor
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_restarts: 5, max_seconds: 5)
