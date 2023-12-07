@@ -44,78 +44,86 @@ defmodule ChatGroups do
       admins:  chat_group_state.admins
     }
 
-    {:ok, {chat_group_id, chat_group_state}}
+    {:ok, chat_group_state}
   end
 
   ## Callbacks
 
-  def handle_call(:get_messages, _from, {chat_group_id, chat_group_state}) do
-    {:reply, chat_group_state.messages, {chat_group_id, chat_group_state}}
+  def handle_call(:get_messages, _from, chat_group_state) do
+    {:reply, chat_group_state.messages, chat_group_state}
   end
 
-  # def handle_cast({:add_message, message = %Message{}}, {chat_group_id, chat_group_state}) do
-  #   new_messages = save_message(chat_group_state.messages, message)
-  #   if Message.secure?(message) do
-  #     MessageCleanup.start_link_cleanup(self(), message)
-  #   end
-  #   Notifications.Task.start_link(chat_group_id, message.receiver)
-  #   {:noreply, {chat_group_id, chat_group_state}}
-  # end
-
-  # defp save_message(messages = %{}, message = %Message{}) do
-  #   # agregar aca la replicación en Crdt despues
-  #   Map.put(messages, message.id, message)
-  # end
-
-  def handle_call(:get_participants, _from, {chat_group_id, chat_group_state}) do
-    {:reply, chat_group_state.participants, {chat_group_id, chat_group_state}}
+  def handle_cast({:add_message, message = %Message{}}, chat_group_state) do
+    new_messages = save_message(chat_group_state.messages, message)
+    if Message.secure?(message) do
+      MessageCleanup.start_link_cleanup(self(), message)
+    end
+    notify_participants(chat_group_state)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    {:noreply, new_state}
   end
 
-  def handle_call({:add_participant, admin, participant}, _from, {chat_group_id, chat_group_state}) do
-    case find_admin(admin, {chat_group_id, chat_group_state}) do
-      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, {chat_group_id, chat_group_state}}
+  def handle_cast({:modify_message, message_id, new_text}, chat_group_state) do
+    new_messages = update_message(chat_group_state.messages, message_id, new_text)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    {:noreply, new_state}
+  end
+
+  def handle_cast({:delete_message, message_id}, chat_group_state) do
+    new_messages = remove_message(chat_group_state.messages, message_id)
+    new_state = %ChatGroups.State{chat_group_state | messages: new_messages}
+    {:noreply, new_state}
+  end
+
+  def handle_call(:get_participants, _from, chat_group_state) do
+    {:reply, chat_group_state.participants, chat_group_state}
+  end
+
+  def handle_call({:add_participant, admin, participant}, _from, chat_group_state) do
+    case find_admin(admin, chat_group_state) do
+      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
       _admin ->
         new_participants = chat_group_state.participants ++ [participant]
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants}
-        {:reply, new_participants, {chat_group_id, new_state}}
+        {:reply, new_participants, new_state}
     end
   end
 
-  def handle_call({:delete_participant, admin, participant}, _from, {chat_group_id, chat_group_state}) do
-    case find_admin(admin, {chat_group_id, chat_group_state}) do
-      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, {chat_group_id, chat_group_state}}
+  def handle_call({:delete_participant, admin, participant}, _from, chat_group_state) do
+    case find_admin(admin, chat_group_state) do
+      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
       _admin ->
         new_participants =
-          case find_participant(participant, {chat_group_id, chat_group_state}) do
+          case find_participant(participant, chat_group_state) do
             nil -> chat_group_state.participants
             _participant -> Enum.reject(chat_group_state.participants, &(&1 == participant))
           end
 
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants}
-        {:reply, new_participants, {chat_group_id, new_state}}
+        {:reply, new_participants, new_state}
     end
   end
 
 
-  def handle_call({:give_administrator_privileges, admin, participant}, _from, {chat_group_id, chat_group_state}) do
-    case find_admin(admin, {chat_group_id, chat_group_state}) do
-      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, {chat_group_id, chat_group_state}}
+  def handle_call({:give_administrator_privileges, admin, participant}, _from, chat_group_state) do
+    case find_admin(admin, chat_group_state) do
+      nil -> {:reply, {:error, "User '#{admin}' no privileges"}, chat_group_state}
       _admin ->
         new_participants =
-          case find_participant(participant, {chat_group_id, chat_group_state}) do
+          case find_participant(participant, chat_group_state) do
             nil -> chat_group_state.participants ++ [participant]
             _participant -> chat_group_state.participants
           end
 
         new_admins = chat_group_state.admins ++ [participant]
         new_state = %ChatGroups.State{chat_group_state | participants: new_participants, admins: new_admins}
-        {:reply, new_admins, {chat_group_id, new_state}}
+        {:reply, new_admins,  new_state}
     end
   end
 
 
-  def handle_call(:get_admins, _from, {chat_group_id, chat_group_state}) do
-    {:reply, chat_group_state.admins, {chat_group_id, chat_group_state}}
+  def handle_call(:get_admins, _from, chat_group_state) do
+    {:reply, chat_group_state.admins, chat_group_state}
   end
 
 
@@ -157,14 +165,34 @@ defmodule ChatGroups do
     GenServer.call(chat_group_pid, {:give_administrator_privileges, admin, participant})
   end
 
-  ## Auxiliares
+  ## Auxiliares o privadas
 
-  defp find_admin(user_id, {_, %ChatGroups.State{admins: admins}}) do
+  defp find_admin(user_id, %ChatGroups.State{admins: admins}) do
     Enum.find(admins, &(&1 == user_id))
   end
 
-  defp find_participant(user_id, {_, %ChatGroups.State{participants: participants}}) do
+  defp find_participant(user_id, %ChatGroups.State{participants: participants}) do
     Enum.find(participants, &(&1 == user_id))
+  end
+
+  defp save_message(messages = %{}, message = %Message{}) do
+    # agregar aca la replicación en Crdt despues
+    Map.put(messages, message.id, message)
+  end
+
+  defp notify_participants(chat_group_state) do
+    Enum.each(chat_group_state.participants, fn participant ->
+      Notifications.Task.start_link(chat_group_state.id, participant)
+    end)
+  end
+
+  defp update_message(messages, message_id, new_text) do
+    # agregar actualizar en el crdt
+    Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
+  end
+
+  defp remove_message(messages = %{}, message_id) do
+    Map.delete(messages, message_id)
   end
 
 end

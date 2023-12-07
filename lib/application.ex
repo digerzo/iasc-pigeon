@@ -6,6 +6,7 @@ defmodule Pigeon.Application do
     children = [
       {Cluster.Supervisor, [topologies(), [name: Pigeon.ClusterSupervisor]]},
       Chats.Supervisor,
+      ChatGroups.Supervisor,
       Notifications.Supervisor,
       # Chats.AgentSupervisor,
       Pigeon.NodeObserver.Supervisor
