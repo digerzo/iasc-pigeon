@@ -38,12 +38,13 @@ defmodule Chats do
 
 
   def init({chat_id, messages}) do
-    chat_state = %Chats.State{
-      id: chat_id,
-      messages: messages
-    }
-
-    {:ok, chat_state}
+    case Chats.Crdt.get_state(chat_id) do
+      nil -> {:ok, %Chats.State{
+        id: chat_id,
+        messages: messages
+      }}
+      existing_state ->{:ok, existing_state}
+    end
   end
 
 
@@ -60,51 +61,63 @@ defmodule Chats do
   end
 
   # Chats.add_message(pid, Message.new("Hola", "agus", "walter"))
-  def handle_cast({:add_message, message = %Message{}}, %{id: id, messages: messages}) do
-    new_messages = save_message(messages, message)
+  def handle_cast({:add_message, message = %Message{}}, chat_state) do
+    new_state = save_message(chat_state, message)
     if Message.secure?(message) do
       MessageCleanup.start_link_cleanup(self(), message)
     end
     Notifications.Task.start_link(message.sender, message.receiver)
-    {:noreply, %{id: id, messages: new_messages}}
+    {:noreply, new_state}
   end
 
-  defp save_message(messages = %{}, message = %Message{}) do
+  defp save_message(%{id: id, messages: messages} = %Chats.State{}, message = %Message{}) do
     # agregar aca la replicación en Crdt despues
-    Map.put(messages, message.id, message)
+    new_messages = Map.put(messages, message.id, message)
+    new_state = %Chats.State{id: id, messages: new_messages}
+    Chats.Crdt.save_state(id, new_state)
+    new_state
   end
 
   # Chats.modify_message(pid,"8h/ocF5Psrc=", "AAAAAAAAA")
-  def handle_cast({:modify_message, message_id, new_text}, %{id: id, messages: messages}) do
-    new_messages = update_message(messages, message_id, new_text)
-    {:noreply, %{id: id, messages: new_messages}}
+  def handle_cast({:modify_message, message_id, new_text}, chat_state) do
+    new_state = update_message(chat_state, message_id, new_text)
+    {:noreply, new_state}
   end
 
-  defp update_message(messages, message_id, new_text) do
+  defp update_message(%{id: id, messages: messages} = %Chats.State{}, message_id, new_text) do
     # agregar actualizar en el crdt
-    Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
+    new_messages = Map.update!(messages, message_id, fn message -> Map.put(message, :text, new_text) end)
+    new_state = %Chats.State{id: id, messages: new_messages}
+    Chats.Crdt.save_state(id, new_state)
+    new_state
   end
 
   # Chats.delete_message(pid, 1700247261156)
-  def handle_cast({:delete_message, message_id}, %{id: id, messages: messages}) do
-    new_messages = remove_message(messages, message_id)
-    {:noreply, %{id: id, messages: new_messages}}
+  def handle_cast({:delete_message, message_id}, chat_state) do
+    new_state = remove_message(chat_state, message_id)
+    {:noreply, new_state}
   end
 
-  defp remove_message(messages = %{}, message_id) do
-    Map.delete(messages, message_id)
+  defp remove_message(%{id: id, messages: messages} = %Chats.State{}, message_id) do
+    new_messages = Map.delete(messages, message_id)
+    new_state = %Chats.State{id: id, messages: new_messages}
+    Chats.Crdt.save_state(id, new_state)
+    new_state
   end
 
   # Chats.delete_messages(pid,[1700246636182, 1700246642924, 1700246652675, 1700246653110])
-  def handle_cast({:delete_messages, message_ids}, %{id: id, messages: messages}) do
-    new_messages = remove_messages(messages, message_ids)
-    {:noreply, %{id: id, messages: new_messages}}
+  def handle_cast({:delete_messages, message_ids}, chat_state) do
+    new_state = remove_messages(chat_state, message_ids)
+    {:noreply, new_state}
   end
 
-  defp remove_messages(messages = %{}, message_ids) do
-    Enum.reduce(message_ids, messages, fn message_id, acc_state ->
+  defp remove_messages(%{id: id, messages: messages}, message_ids) do
+    new_messages = Enum.reduce(message_ids, messages, fn message_id, acc_state ->
       Map.delete(acc_state, message_id)
     end)
+    new_state = %Chats.State{id: id, messages: new_messages}
+    Chats.Crdt.save_state(id, new_state)
+    new_state
 
   end
 

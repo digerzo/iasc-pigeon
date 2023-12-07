@@ -46,6 +46,8 @@ defmodule Pigeon.NodeObserver do
         # registries
         set_members(Chats.Registry)
         set_members(Notifications.Registry)
+
+        Chats.Crdt.refresh_neighbours()
   end
 
   defp set_members(name) do
