@@ -29,4 +29,10 @@ defmodule ChatGroups.DynamicSupervisor do
     Horde.DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
+  # {:ok, pid} = ChatGroups.DynamicSupervisor.start_child(:crazy_id, "agus")
+  def start_child(chat_group_id, owner) do
+    spec = {ChatGroups, %{id: chat_group_id, owner: owner}}
+    Horde.DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
 end

@@ -16,10 +16,11 @@ defmodule ChatGroups do
   end
 
   # child spec
-  def child_spec({chat_group_id, info}) do
+  def child_spec(%{id: chat_group_id, owner: owner}) do
+    state = ChatGroups.State.new(chat_group_id, owner)
     %{
       id: "chat_group_#{chat_group_id}",
-      start: {__MODULE__, :start_link, [chat_group_id, info]},
+      start: {__MODULE__, :start_link, [chat_group_id, state]},
       type: :worker,
       restart: :transient
     }
